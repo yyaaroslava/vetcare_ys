@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap');
+
+:root {
+  --teal: #0d9488;
+  --teal-light: #14b8a6;
+  --teal-dark: #0f766e;
+  --teal-bg: #f0fdfa;
+  --accent: #f97316;
+  --red: #ef4444;
+  --green: #22c55e;
+  --bg: #f8fafc;
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --shadow: 0 4px 24px rgba(13,148,136,0.10);
+  --shadow-lg: 0 8px 40px rgba(13,148,136,0.15);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --sidebar-width: 260px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--gray-800);
+  min-height: 100vh;
+}
+
+/* Auth screens */
+.auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0d9488 0%, #0f766e 40%, #065f46 100%); position: relative; overflow: hidden; }
+.auth-screen::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:rgba(255,255,255,0.05); top:-200px; right:-200px; }
+.auth-card { background: var(--white); border-radius: 24px; padding: 44px 40px; width: 420px; max-width: 96vw; box-shadow: 0 24px 80px rgba(0,0,0,0.25); position: relative; z-index: 1; animation: slideUp 0.5s ease; }
+@keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+.auth-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+.auth-logo-icon { width: 46px; height: 46px; background: linear-gradient(135deg, var(--teal), var(--teal-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.auth-logo-icon::after { content: '🐾'; }
+.auth-logo-text { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--gray-900); font-weight: 700; }
+.auth-title { font-size: 22px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+.auth-subtitle { font-size: 13px; color: var(--gray-500); margin-bottom: 26px; }
+
+.role-tabs { display: flex; gap: 6px; background: var(--gray-100); border-radius: 12px; padding: 4px; margin-bottom: 22px; }
+.role-tab { flex: 1; padding: 8px 4px; border: none; background: transparent; border-radius: 9px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 600; color: var(--gray-500); transition: all 0.2s; }
+.role-tab.active { background: var(--white); color: var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+.auth-link { text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray-500); }
+.auth-link a { color: var(--teal); font-weight: 700; cursor: pointer; text-decoration: none; }
+.auth-error { background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+
+.form-group { margin-bottom: 18px; }
+.form-label { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; padding: 11px 14px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px; color: var(--gray-800);
+  outline: none; transition: border 0.2s;
+  background: var(--gray-50);
+}
+.form-input:focus { border-color: var(--teal); background: var(--white); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 13px 28px; border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; width: 100%; }
+.btn-primary { background: linear-gradient(135deg, var(--teal-light), var(--teal-dark)); color: white; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(13,148,136,0.4); }
