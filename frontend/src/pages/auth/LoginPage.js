@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
 const LoginPage = () => {
@@ -9,15 +9,18 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       await login({ email, password });
-      window.location.href = '/';
+      navigate('/');
     } catch (err) {
-      setError('Невірна пошта або пароль');
+      const msg = err.response?.data?.detail || 'Невірна пошта або пароль';
+      setError(msg);
     } finally {
       setLoading(false);
     }
