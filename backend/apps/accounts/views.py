@@ -69,3 +69,23 @@ class LogoutView(APIView):
         except Exception:
             pass
         return Response({'detail': 'Вихід виконано'}, status=status.HTTP_200_OK)
+
+
+# Список лікарів — для вибору лікуючого лікаря при додаванні тварини
+class VetListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(is_staff=True, is_superuser=False)
+
+
+# Список клієнтів — доступний для лікарів та адмінів
+class ClientListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return User.objects.filter(is_staff=False, is_superuser=False).order_by('first_name')
+        return User.objects.none()

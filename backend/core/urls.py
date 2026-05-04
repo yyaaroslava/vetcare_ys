@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts/', include('apps.accounts.urls')),
-    # Ендпоінти для інших модулів будуть додані згідно з планом розробки
+    path('api/animals/', include('apps.animals.urls')),
 ]
 
 if settings.DEBUG:
