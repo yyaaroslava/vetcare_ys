@@ -7,10 +7,12 @@ const menus = {
     { section: 'Головне' },
     { to: '/client', label: 'Головна', end: true },
     { to: '/client/pets', label: 'Мої тварини' },
+    { to: '/client/appointments', label: 'Записи на прийом' },
   ],
   doctor: [
     { section: 'Робота' },
     { to: '/vet', label: 'Головна', end: true },
+    { to: '/vet/schedule', label: 'Розклад прийомів' },
     { to: '/vet/patients', label: 'Пацієнти' },
   ],
   admin: [
@@ -18,6 +20,7 @@ const menus = {
     { to: '/admin', label: 'Головна', end: true },
     { to: '/admin/users', label: 'Користувачі' },
     { to: '/admin/animals', label: 'Тварини' },
+    { to: '/admin/appointments', label: 'Всі прийоми' },
   ],
 };
 
@@ -66,7 +69,7 @@ export default function Sidebar({ role }) {
             <div className="user-name">{user?.first_name} {user?.last_name}</div>
             <div className="user-role">{user?.email}</div>
           </div>
-          <button className="logout-btn" onClick={handleLogout} title="Вийти">↩</button>
+          <button className="logout-btn" onClick={handleLogout} title="Вийти">Вихід</button>
         </div>
       </div>
     </div>

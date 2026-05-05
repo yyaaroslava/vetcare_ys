@@ -5,12 +5,20 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminUsers from './pages/admin/Users';
+import AdminAnimals from './pages/admin/Animals';
+import AdminAppointments from './pages/admin/Appointments';
+
 import AppLayout from './components/layout/AppLayout';
 
 import ClientPets from './pages/client/Pets';
 import ClientMedCard from './pages/client/MedCard';
+import ClientAppointments from './pages/client/Appointments';
 
 import VetPatients from './pages/vet/Patients';
+import VetDashboard from './pages/vet/Dashboard';
+import VetSchedule from './pages/vet/Schedule';
 
 import './index.css';
 
@@ -39,6 +47,18 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<RoleRedirect />} />
 
+          {/* Admin */}
+          <Route path="/admin" element={
+            <PrivateRoute roles={['admin']}>
+              <AppLayout role="admin" />
+            </PrivateRoute>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="animals" element={<AdminAnimals />} />
+            <Route path="appointments" element={<AdminAppointments />} />
+          </Route>
+
           {/* Client */}
           <Route path="/client" element={
             <PrivateRoute roles={['client']}>
@@ -48,6 +68,7 @@ function App() {
             <Route index element={<Navigate to="pets" replace />} />
             <Route path="pets" element={<ClientPets />} />
             <Route path="pets/:id" element={<ClientMedCard />} />
+            <Route path="appointments" element={<ClientAppointments />} />
           </Route>
 
           {/* Vet */}
@@ -56,9 +77,11 @@ function App() {
               <AppLayout role="doctor" />
             </PrivateRoute>
           }>
-            <Route index element={<Navigate to="patients" replace />} />
+            <Route index element={<VetDashboard />} />
+            <Route path="schedule" element={<VetSchedule />} />
             <Route path="patients" element={<VetPatients />} />
             <Route path="patients/:id" element={<ClientMedCard />} />
+            <Route path="appointments" element={<ClientAppointments />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

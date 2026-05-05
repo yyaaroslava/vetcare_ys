@@ -1,4 +1,4 @@
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -89,3 +89,10 @@ class ClientListView(generics.ListAPIView):
         if user.is_staff or user.is_superuser:
             return User.objects.filter(is_staff=False, is_superuser=False).order_by('first_name')
         return User.objects.none()
+# Управління користувачами для адміна
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        return User.objects.filter(is_staff=False, is_superuser=False).order_by('-created_at')

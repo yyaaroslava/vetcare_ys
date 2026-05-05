@@ -18,17 +18,57 @@ def validate_ua_phone(value):
     # Очищення від пробілів та дефісів для збереження в єдиному форматі
     return value.replace(' ', '').replace('-', '')
 
-# Основний серіалізатор користувача
+# Основний серіалізатор користувача: керує даними профілю, паролями та ролями
 class UserSerializer(serializers.ModelSerializer):
+    # Пароль доступний тільки для запису, щоб не передавати його у відповідях API
+    password = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'phone', 'created_at']
-        read_only_fields = ['id', 'created_at', 'role']
+        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'phone', 'password', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
-# Серіалізатор для процесу реєстрації
+    def validate_first_name(self, value):
+        return validate_name_field(value, "Ім'я")
+
+    def validate_last_name(self, value):
+        return validate_name_field(value, "Прізвище")
+
+    def validate_phone(self, value):
+        if not value or len(value) < 10:
+             raise serializers.ValidationError("Номер телефону обов'язковий (мін. 10 цифр)")
+        return validate_ua_phone(value)
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        # Генерація username
+        base_username = validated_data['email'].split('@')[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        user = User.objects.create_user(username=username, **validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+# Серіалізатор для реєстрації: включає обов'язкове підтвердження пароля та телефону
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True)
+    phone = serializers.CharField(required=True) # Телефон тепер обов'язковий поле
 
     class Meta:
         model = User
@@ -41,20 +81,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         return validate_name_field(value, "Прізвище")
 
     def validate_phone(self, value):
+        if len(value) < 10:
+             raise serializers.ValidationError("Номер телефону обов'язковий (мін. 10 цифр)")
         return validate_ua_phone(value)
 
     def validate(self, data):
-        # Перевірка збігу пароля та підтвердження
         if data['password'] != data['password2']:
             raise serializers.ValidationError({'password2': 'Паролі не співпадають'})
         return data
 
     def create(self, validated_data):
-        # Видалення допоміжних полів перед створенням запису
         validated_data.pop('password2')
         password = validated_data.pop('password')
         
-        # Генерація username на основі поштової адреси
         base_username = validated_data['email'].split('@')[0]
         username = base_username
         counter = 1

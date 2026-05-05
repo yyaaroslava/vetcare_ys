@@ -56,7 +56,6 @@ class Animal(models.Model):
     birth_date = models.DateField(null=True, blank=True, verbose_name='Дата народження')
     weight = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Вага (кг)')
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Колір')
-    chip_number = models.CharField(max_length=50, blank=True)
     allergies = models.TextField(blank=True, verbose_name='Алергії')
     chronic_diseases = models.TextField(blank=True)
     notes = models.TextField(blank=True)

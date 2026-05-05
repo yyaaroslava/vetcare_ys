@@ -29,7 +29,7 @@ class AnimalSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'owner', 'owner_name', 'owner_phone', 'owner_email',
             'name', 'species', 'species_display', 'breed', 'gender',
-            'birth_date', 'weight', 'color', 'chip_number',
+            'birth_date', 'weight', 'color',
             'allergies', 'chronic_diseases', 'notes',
             'age', 'created_at', 'updated_at'
         ]
