@@ -36,6 +36,10 @@ export default function VetPatients() {
 
   if (loading) return <Spinner />;
 
+  /**
+   * Логіка фільтрації списку тварин.
+   * Пошук ведеться за кличкою, власником, породою або видом тварини.
+   */
   const filtered = search
     ? animals.filter(a =>
         a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -46,26 +50,27 @@ export default function VetPatients() {
     : animals;
 
   return (
-    <div>
+    <div className="page-container">
       <div className="page-header">
         <div>
           <div className="page-title">Пацієнти</div>
-          <div className="page-subtitle">Медичні картки тварин</div>
+          <div className="page-subtitle">Медичні картки всіх тварин клініки</div>
         </div>
-        {/* Пошук без іконок */}
-        <input 
-          className="form-input" 
-          style={{width:280}} 
-          placeholder="Пошук за кличкою, власником, породою..." 
-          value={search} 
-          onChange={e => setSearch(e.target.value)} 
-        />
       </div>
 
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Всі пацієнти</div>
-          <span className="badge badge-blue">{filtered.length}</span>
+          <div style={{flex: 1}}>
+            <div className="card-title">Всі пацієнти</div>
+            <div className="page-subtitle" style={{marginTop: 2}}>Знайдено: {filtered.length}</div>
+          </div>
+          <input 
+            className="form-input" 
+            style={{width: 320}} 
+            placeholder="Пошук за кличкою, власником, породою..." 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+          />
         </div>
         {filtered.length === 0
           ? <div className="card-body"><EmptyState title="Пацієнтів не знайдено" /></div>

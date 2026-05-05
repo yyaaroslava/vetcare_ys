@@ -16,7 +16,7 @@ export const ToastProvider = ({ children }) => {
       {children}
       {toast && (
         <div className={`toast toast-${toast.type}`}>
-          {toast.type === 'success' ? '✔' : '✕'} {toast.message}
+          {toast.message}
         </div>
       )}
     </>
@@ -59,10 +59,10 @@ export const Badge = ({ color = 'gray', children }) => (
 export const StatusBadge = ({ status }) => {
   const map = {
     pending:   { color: 'orange', label: 'Очікується' },
-    confirmed: { color: 'blue',   label: '✓ Підтверджено' },
-    completed: { color: 'green',  label: '✔ Виконано' },
-    cancelled: { color: 'red',    label: '✕ Скасовано' },
-    done:      { color: 'green',  label: '✔ Виконано' },
+    confirmed: { color: 'blue',   label: 'Підтверджено' },
+    completed: { color: 'green',  label: 'Виконано' },
+    cancelled: { color: 'red',    label: 'Скасовано' },
+    done:      { color: 'green',  label: 'Виконано' },
     planned:   { color: 'orange', label: 'Заплановано' },
     overdue:   { color: 'red',    label: 'Прострочено' },
     follow_up: { color: 'blue',   label: 'Повторний огляд' },
@@ -94,7 +94,7 @@ export const EmptyState = ({ icon = '', title, subtitle, action }) => (
 );
 
 // ─── Species emoji helper ─────────────────────────────────
-export const speciesEmoji = s => ({ dog:'🐶', cat:'🐱', bird:'🐦', rabbit:'🐰', other:'🐾' }[s] || '🐾');
+export const speciesEmoji = s => '';
 
 // ─── Role label ───────────────────────────────────────────
 export const roleLabel = r => ({ client:'Власник', vet:'Лікар', admin:'Адміністратор' }[r] || r);
