@@ -37,6 +37,12 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_phone(self, value):
         if not value or len(value) < 10:
              raise serializers.ValidationError("Номер телефону обов'язковий (мін. 10 цифр)")
+        cleaned = value.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        if len(cleaned) > 13:
+             raise serializers.ValidationError("Номер телефону занадто довгий (макс. 13 символів, напр. +380XXXXXXXXX)")
+        digits = cleaned.lstrip('+')
+        if not digits.isdigit():
+             raise serializers.ValidationError("Номер телефону може містити лише цифри та символ +")
         return validate_ua_phone(value)
 
     def create(self, validated_data):
@@ -83,6 +89,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate_phone(self, value):
         if len(value) < 10:
              raise serializers.ValidationError("Номер телефону обов'язковий (мін. 10 цифр)")
+        cleaned = value.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        if len(cleaned) > 13:
+             raise serializers.ValidationError("Номер телефону занадто довгий (макс. 13 символів, напр. +380XXXXXXXXX)")
+        digits = cleaned.lstrip('+')
+        if not digits.isdigit():
+             raise serializers.ValidationError("Номер телефону може містити лише цифри та символ +")
         return validate_ua_phone(value)
 
     def validate(self, data):

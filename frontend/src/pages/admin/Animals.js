@@ -1,27 +1,60 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getAnimals } from '../../api/animals';
-import { Spinner, EmptyState, speciesEmoji } from '../../components/ui';
+import { getVets } from '../../api/auth';
+import { Spinner, EmptyState } from '../../components/ui';
 
 /**
  * Сторінка перегляду всіх тварин у системі для адміністратора.
- * Відображає зведену таблицю з інформацією про вид, породу та власника.
+ * Відображає зведену таблицю з інформацією про вид, породу, власника та лікаря.
  */
+
+import { formatAge } from '../../utils/formatters';
+
 export default function AdminAnimals() {
   const [animals, setAnimals] = useState([]);
+  const [vets, setVets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterOwner, setFilterOwner] = useState('');
+  const [filterSpecies, setFilterSpecies] = useState('');
+  const [filterVet, setFilterVet] = useState('');
 
   useEffect(() => {
-    getAnimals().then(r => setAnimals(r.data.results || r.data)).finally(() => setLoading(false));
+    Promise.all([
+      getAnimals(),
+      getVets()
+    ]).then(([resAnimals, resVets]) => {
+      setAnimals(resAnimals.data.results || resAnimals.data);
+      setVets(resVets.data.results || resVets.data);
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <Spinner />;
 
-  let filtered = animals.filter(a =>
-    a.name.toLowerCase().includes(search.toLowerCase()) ||
-    a.owner_name?.toLowerCase().includes(search.toLowerCase()) ||
-    a.breed?.toLowerCase().includes(search.toLowerCase())
-  );
+  let filtered = [...animals];
+  if (filterOwner) filtered = filtered.filter(a => String(a.owner) === filterOwner);
+  if (filterSpecies) filtered = filtered.filter(a => a.species_display === filterSpecies);
+  if (filterVet) filtered = filtered.filter(a => a.vet_display === filterVet);
+  if (search) {
+    filtered = filtered.filter(a =>
+      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.owner_name?.toLowerCase().includes(search.toLowerCase()) ||
+      a.breed?.toLowerCase().includes(search.toLowerCase()) ||
+      a.species_display?.toLowerCase().includes(search.toLowerCase()) ||
+      a.vet_display?.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+
+  const uniqueOwners = Array.from(new Set(animals.map(a => JSON.stringify({ id: a.owner, name: a.owner_name }))))
+    .map(s => JSON.parse(s))
+    .filter(o => o.id)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const uniqueSpecies = Array.from(new Set(animals.map(a => a.species_display))).filter(Boolean).sort();
+  const allVets = vets.map(v => `${v.first_name} ${v.last_name}`).sort();
+
+  const hasFilters = search || filterOwner || filterSpecies || filterVet;
 
   return (
     <div className="page-container">
@@ -32,31 +65,73 @@ export default function AdminAnimals() {
         </div>
       </div>
 
+      <div className="flex gap-2 mb-2" style={{ alignItems: 'center' }}>
+        <input className="form-input" style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
+          placeholder="Швидкий пошук"
+          value={search} onChange={e => setSearch(e.target.value)} />
+        {hasFilters && (
+          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterOwner(''); setFilterSpecies(''); setFilterVet(''); }}>
+            Скинути все
+          </button>
+        )}
+      </div>
+
       <div className="card">
         <div className="card-header">
-          <div style={{flex: 1}}>
-            <div className="card-title">Всі тварини</div>
-            <div style={{fontSize: 12, color: 'var(--gray-500)', marginTop: 2}}>Знайдено: {filtered.length}</div>
-          </div>
-          <input className="form-input" style={{width: 320}} placeholder="Пошук за кличкою, власником..." value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="card-title">Всі тварини</div>
+          <span className="badge badge-teal">{filtered.length}</span>
         </div>
-        
+
         {filtered.length === 0
           ? <div className="card-body"><EmptyState icon="" title="Тварин не знайдено" /></div>
           : <div className="table-wrap">
             <table>
-              <thead>
-                <tr><th>Тварина</th><th>Вид / Порода</th><th>Власник</th><th>Вага</th><th>Алергія</th><th>Реєстрація</th></tr>
+              <thead style={{ background: 'var(--teal)', color: '#fff' }}>
+                <tr style={{ fontSize: 13 }}>
+                  <th style={{ padding: '12px 16px' }}>ТВАРИНА</th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <div style={{ marginBottom: 4 }}>ВИД / ПОРОДА</div>
+                    <select className="form-select input-xs"
+                      value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
+                      <option value="">Всі види</option>
+                      {uniqueSpecies.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <div style={{ marginBottom: 4 }}>ВЛАСНИК</div>
+                    <select className="form-select input-xs"
+                      value={filterOwner} onChange={e => setFilterOwner(e.target.value)}>
+                      <option value="">Всі власники</option>
+                      {uniqueOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                    </select>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <div style={{ marginBottom: 4 }}>ЛІКАР</div>
+                    <select className="form-select input-xs"
+                      value={filterVet} onChange={e => setFilterVet(e.target.value)}>
+                      <option value="">Всі лікарі</option>
+                      {allVets.map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>ВІК</th>
+                  <th style={{ padding: '12px 16px' }}>ВАГА</th>
+                  <th style={{ padding: '12px 16px' }}>АЛЕРГІЯ</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px' }}>ДІЇ</th>
+                </tr>
               </thead>
               <tbody>
                 {filtered.map(a => (
                   <tr key={a.id}>
-                    <td><span style={{fontSize:18,marginRight:8}}>{speciesEmoji(a.species)}</span><strong>{a.name}</strong></td>
-                    <td>{a.species_display} · {a.breed||'—'}</td>
+                    <td><strong style={{ color: 'var(--teal)' }}>{a.name}</strong></td>
+                    <td>{a.species_display} · {a.breed || '—'}</td>
                     <td>{a.owner_name}</td>
+                    <td>{a.vet_display || '—'}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{formatAge(a.birth_date)}</td>
                     <td>{a.weight ? `${a.weight} кг` : '—'}</td>
                     <td>{a.allergies ? <span className="badge badge-red">{a.allergies}</span> : <span className="badge badge-green">Немає</span>}</td>
-                    <td>{new Date(a.created_at).toLocaleDateString('uk-UA')}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <Link to={`/admin/animals/${a.id}`} className="btn btn-teal btn-sm" style={{ fontSize: 12, padding: '6px 14px' }}>Медична картка</Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

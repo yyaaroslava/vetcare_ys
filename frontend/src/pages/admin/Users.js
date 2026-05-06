@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/auth';
 import { Spinner, Modal, EmptyState, showToast, ConfirmModal, Badge, roleLabel, roleBadgeColor } from '../../components/ui';
 
-const EMPTY = { email:'', first_name:'', last_name:'', phone:'+380', role:'client', password:'' };
+const EMPTY = { email: '', first_name: '', last_name: '', phone: '+380', role: 'client', password: '' };
 
 /**
  * Панель управління користувачами (доступна тільки Адміністратору).
@@ -29,7 +29,7 @@ export default function AdminUsers() {
   };
   const openEdit = u => {
     setEditing(u);
-    setForm({ email:u.email, first_name:u.first_name, last_name:u.last_name, phone:u.phone||'+380', role:u.role, password:'' });
+    setForm({ email: u.email, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '+380', role: u.role, password: '' });
     setModal(true);
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -71,45 +71,70 @@ export default function AdminUsers() {
         <button className="btn btn-teal" onClick={openAdd}>+ Додати</button>
       </div>
 
+      <div className="flex gap-2 mb-2" style={{ alignItems: 'center' }}>
+        <input className="form-input" style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
+          placeholder="Швидкий пошук"
+          value={search} onChange={e => setSearch(e.target.value)} />
+        {(search || filterRole) && (
+          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterRole(''); }}>
+            Скинути все
+          </button>
+        )}
+      </div>
+
       <div className="card">
-        <div className="card-header" style={{flexWrap: 'wrap', gap: 16}}>
-          <div style={{flex: 1, minWidth: 200}}>
-            <div className="card-title">Користувачі системи</div>
-            <div style={{fontSize: 12, color: 'var(--gray-500)', marginTop: 2}}>Всього зареєстровано: {filtered.length}</div>
-          </div>
-          <div style={{display: 'flex', gap: 10, flexWrap: 'wrap'}}>
-            <select className="form-select" style={{width:160}} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-              <option value="">Всі ролі</option>
-              <option value="client">Клієнти</option>
-              <option value="doctor">Лікарі</option>
-              <option value="admin">Адміністратори</option>
-            </select>
-            <input className="form-input" style={{width:260}} placeholder="Пошук..." value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
+        <div className="card-header">
+          <div className="card-title">Користувачі системи</div>
+          <span className="badge badge-teal">{filtered.length}</span>
         </div>
-        
+
         {filtered.length === 0
           ? <div className="card-body"><EmptyState icon="" title="Користувачів не знайдено" /></div>
           : <div className="table-wrap">
             <table>
-              <thead><tr><th>Користувач</th><th>Email</th><th>Роль</th><th>Дії</th></tr></thead>
+              <thead style={{ background: 'var(--teal)', color: '#fff' }}>
+                <tr style={{ fontSize: 14 }}>
+                  <th style={{ padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>КОРИСТУВАЧ</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>EMAIL</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ width: 160, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>РОЛЬ</div>
+                    <select className="form-select input-xs"
+                      value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+                      <option value="">Всі ролі</option>
+                      <option value="admin">Адміністратор</option>
+                      <option value="doctor">Лікар</option>
+                      <option value="client">Клієнт</option>
+                    </select>
+                  </th>
+                  <th style={{ textAlign: 'center', width: 200, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ДІЇ</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                </tr>
+              </thead>
               <tbody>
                 {filtered.map(u => {
-                  const initials = `${u.first_name?.[0]||''}${u.last_name?.[0]||''}`.toUpperCase() || u.email[0].toUpperCase();
+                  const initials = `${u.first_name?.[0] || ''}${u.last_name?.[0] || ''}`.toUpperCase() || u.email[0].toUpperCase();
                   return (
                     <tr key={u.id}>
                       <td>
-                        <div style={{display:'flex',alignItems:'center',gap:10}}>
-                          <div style={{width:34,height:34,borderRadius:'50%',background:'var(--teal-bg)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--teal)',fontSize:12,fontWeight:700,flexShrink:0}}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--teal-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                             {initials}
                           </div>
-                          <div style={{fontWeight:700}}>{u.first_name} {u.last_name}</div>
+                          <div style={{ fontWeight: 700 }}>{u.first_name} {u.last_name}</div>
                         </div>
                       </td>
                       <td>{u.email}</td>
                       <td><Badge color={roleBadgeColor(u.role)}>{roleLabel(u.role)}</Badge></td>
                       <td>
-                        <div style={{display:'flex',gap:6}}>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                           <button className="btn btn-outline btn-sm" onClick={() => openEdit(u)}>Редагувати</button>
                           <button className="btn btn-red btn-sm" onClick={() => setConfirm(u)}>Видалити</button>
                         </div>
@@ -126,29 +151,30 @@ export default function AdminUsers() {
         title={editing ? 'Редагувати користувача' : 'Новий користувач'}
         actions={<>
           <button className="btn btn-gray" onClick={() => setModal(false)}>Скасувати</button>
-          <button className="btn btn-teal" onClick={handleSave} disabled={saving}>{saving?'...':'Зберегти'}</button>
+          <button className="btn btn-teal" onClick={handleSave} disabled={saving}>{saving ? '...' : 'Зберегти'}</button>
         </>}>
         <div className="grid-2">
           <div className="form-group">
             <label className="form-label">Ім'я</label>
-            <input className="form-input" value={form.first_name} onChange={e=>set('first_name',e.target.value)} />
+            <input className="form-input" value={form.first_name} onChange={e => set('first_name', e.target.value)} />
           </div>
           <div className="form-group">
             <label className="form-label">Прізвище</label>
-            <input className="form-input" value={form.last_name} onChange={e=>set('last_name',e.target.value)} />
+            <input className="form-input" value={form.last_name} onChange={e => set('last_name', e.target.value)} />
           </div>
         </div>
         <div className="form-group">
           <label className="form-label">Email *</label>
-          <input className="form-input" type="email" value={form.email} onChange={e=>set('email',e.target.value)} />
+          <input className="form-input" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
         </div>
         <div className="form-group">
           <label className="form-label">Телефон *</label>
-          <input className="form-input" value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder="+380..." />
+          <input className="form-input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+380XXXXXXXXX" maxLength={13} />
+          <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>Формат: +380XXXXXXXXX (макс. 13 символів)</div>
         </div>
         <div className="form-group">
           <label className="form-label">Роль</label>
-          <select className="form-select" value={form.role} onChange={e=>set('role',e.target.value)}>
+          <select className="form-select" value={form.role} onChange={e => set('role', e.target.value)}>
             <option value="client">Клієнт</option>
             <option value="doctor">Лікар</option>
             <option value="admin">Адміністратор</option>
@@ -156,7 +182,7 @@ export default function AdminUsers() {
         </div>
         <div className="form-group">
           <label className="form-label">{editing ? 'Новий пароль (залиште порожнім)' : 'Пароль *'}</label>
-          <input className="form-input" type="password" value={form.password} onChange={e=>set('password',e.target.value)} />
+          <input className="form-input" type="password" value={form.password} onChange={e => set('password', e.target.value)} />
         </div>
       </Modal>
 

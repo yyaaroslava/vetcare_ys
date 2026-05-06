@@ -4,19 +4,17 @@ import { useAuth } from '../../context/AuthContext';
 
 const menus = {
   client: [
-    { section: 'Головне' },
     { to: '/client', label: 'Головна', end: true },
     { to: '/client/pets', label: 'Мої тварини' },
     { to: '/client/appointments', label: 'Записи на прийом' },
   ],
   doctor: [
-    { section: 'Робота' },
     { to: '/vet', label: 'Головна', end: true },
     { to: '/vet/schedule', label: 'Розклад прийомів' },
     { to: '/vet/patients', label: 'Пацієнти' },
+    { to: '/vet/visits', label: 'Журнал візитів' },
   ],
   admin: [
-    { section: 'Управління' },
     { to: '/admin', label: 'Головна', end: true },
     { to: '/admin/users', label: 'Користувачі' },
     { to: '/admin/animals', label: 'Тварини' },

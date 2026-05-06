@@ -12,6 +12,7 @@ import AdminAppointments from './pages/admin/Appointments';
 
 import AppLayout from './components/layout/AppLayout';
 
+import ClientDashboard from './pages/client/Dashboard';
 import ClientPets from './pages/client/Pets';
 import ClientMedCard from './pages/client/MedCard';
 import ClientAppointments from './pages/client/Appointments';
@@ -19,6 +20,9 @@ import ClientAppointments from './pages/client/Appointments';
 import VetPatients from './pages/vet/Patients';
 import VetDashboard from './pages/vet/Dashboard';
 import VetSchedule from './pages/vet/Schedule';
+import VetVisits from './pages/vet/Visits';
+
+import ClientVisits from './pages/client/Visits';
 
 import './index.css';
 
@@ -56,6 +60,7 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="animals" element={<AdminAnimals />} />
+            <Route path="animals/:id" element={<ClientMedCard />} />
             <Route path="appointments" element={<AdminAppointments />} />
           </Route>
 
@@ -65,10 +70,11 @@ function App() {
               <AppLayout role="client" />
             </PrivateRoute>
           }>
-            <Route index element={<Navigate to="pets" replace />} />
+            <Route index element={<ClientDashboard />} />
             <Route path="pets" element={<ClientPets />} />
             <Route path="pets/:id" element={<ClientMedCard />} />
             <Route path="appointments" element={<ClientAppointments />} />
+            <Route path="visits" element={<ClientVisits />} />
           </Route>
 
           {/* Vet */}
@@ -82,6 +88,7 @@ function App() {
             <Route path="patients" element={<VetPatients />} />
             <Route path="patients/:id" element={<ClientMedCard />} />
             <Route path="appointments" element={<ClientAppointments />} />
+            <Route path="visits" element={<VetVisits />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
