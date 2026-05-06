@@ -83,10 +83,8 @@ export const ConfirmModal = ({ open, onClose, onConfirm, title, message, danger 
 );
 
 // ─── Empty State ─────────────────────────────────────────
-// Компонент для відображення порожнього стану списків
-export const EmptyState = ({ icon = '', title, subtitle, action }) => (
+export const EmptyState = ({ title, subtitle, action }) => (
   <div style={{ textAlign:'center', padding:'48px 24px', color:'var(--gray-400)' }}>
-    {icon && <div style={{ fontSize: 52, marginBottom: 14 }}>{icon}</div>}
     <div style={{ fontSize: 16, fontWeight: 700, color:'var(--gray-600)', marginBottom: 6 }}>{title}</div>
     {subtitle && <div style={{ fontSize: 13, marginBottom: 16 }}>{subtitle}</div>}
     {action}
@@ -94,8 +92,23 @@ export const EmptyState = ({ icon = '', title, subtitle, action }) => (
 );
 
 // ─── Species emoji helper ─────────────────────────────────
-export const speciesEmoji = s => '';
+export const speciesEmoji = s => {
+  const map = {
+    dog: '🐶',
+    cat: '🐱',
+    bird: '🦜',
+    rabbit: '🐰',
+    other: '🐾',
+    // Також додамо українські назви на всяк випадок
+    'Собака': '🐶',
+    'Кіт': '🐱',
+    'Кішка': '🐱',
+    'Птах': '🦜',
+    'Кролик': '🐰'
+  };
+  return map[s] || '🐾';
+};
 
 // ─── Role label ───────────────────────────────────────────
-export const roleLabel = r => ({ client:'Власник', vet:'Лікар', admin:'Адміністратор' }[r] || r);
-export const roleBadgeColor = r => ({ client:'blue', vet:'teal', admin:'orange' }[r] || 'gray');
+export const roleLabel = r => ({ client:'Власник', doctor:'Лікар', admin:'Адміністратор' }[r] || r);
+export const roleBadgeColor = r => ({ client:'blue', doctor:'teal', admin:'orange' }[r] || 'gray');

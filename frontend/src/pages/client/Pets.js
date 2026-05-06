@@ -34,7 +34,18 @@ export default function ClientPets() {
   const load = () => getAnimals().then(r => setAnimals(r.data.results || r.data)).finally(() => setLoading(false));
   
   // Завантаження даних при ініціалізації компонента
-  useEffect(() => { load(); getVets().then(r => setVets(r.data.results || r.data)); }, []);
+  useEffect(() => { 
+    load(); 
+    getVets().then(r => setVets(r.data.results || r.data)); 
+    
+    // Перевірка action=new у параметрах URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'new') {
+      setModal(true);
+      // Очищуємо параметр з URL без перезавантаження
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Відкриття модального вікна для додавання нової тварини
   const openAdd = () => { setEditing(null); setForm(EMPTY); setModal(true); };
@@ -116,11 +127,11 @@ export default function ClientPets() {
                 <button title="Видалити" style={{background: 'white', border: '1px solid var(--gray-200)', borderRadius: 6, padding: '4px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', fontSize: 13, color: 'var(--red)'}} onClick={e => { e.stopPropagation(); setConfirm(a); }}>Видалити</button>
               </div>
 
-              <div className="pet-card-body" style={{textAlign:'center', display:'flex', flexDirection:'column', padding: '24px 20px'}}>
-                <div className="pet-card-name" style={{fontSize: 22, fontWeight: 800, color: 'var(--gray-900)', marginBottom: 20}}>{a.name}</div>
+              <div className="pet-card-body" style={{textAlign:'center', display:'flex', flexDirection:'column', padding: '40px 28px', minHeight: 180}}>
+                <div className="pet-card-name" style={{fontSize: 26, fontWeight: 800, color: 'var(--gray-900)', marginBottom: 28}}>{a.name}</div>
                 
                 <div style={{marginTop:'auto'}}>
-                  <button className="btn btn-teal w-full" style={{justifyContent:'center', borderRadius:12, padding:'10px', fontSize: 14, fontWeight: 700}}
+                  <button className="btn btn-teal w-full" style={{justifyContent:'center', borderRadius:12, padding:'12px', fontSize: 15, fontWeight: 700}}
                     onClick={e => { e.stopPropagation(); navigate(`/client/pets/${a.id}`); }}>
                     Медична картка
                   </button>
@@ -171,7 +182,13 @@ export default function ClientPets() {
           </div>
           <div className="form-group" style={{marginBottom:0}}>
             <label className="form-label">Дата народження</label>
-            <input className="form-input" type="date" value={form.birth_date} onChange={e=>set('birth_date',e.target.value)} />
+            <input 
+              className="form-input" 
+              type="date" 
+              value={form.birth_date} 
+              onChange={e=>set('birth_date',e.target.value)} 
+              max={new Date().toISOString().split('T')[0]}
+            />
           </div>
         </div>
         <div className="grid-2 mt-4">

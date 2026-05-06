@@ -23,13 +23,14 @@ class AnimalSerializer(serializers.ModelSerializer):
     species = AutoCreateRelatedField()
     breed = AutoCreateRelatedField(required=False, allow_blank=True, allow_null=True)
     color = AutoCreateRelatedField(required=False, allow_blank=True, allow_null=True)
+    vet_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Animal
         fields = [
             'id', 'owner', 'owner_name', 'owner_phone', 'owner_email',
             'name', 'species', 'species_display', 'breed', 'gender',
-            'birth_date', 'weight', 'color',
+            'birth_date', 'weight', 'color', 'vet', 'vet_display',
             'allergies', 'chronic_diseases', 'notes',
             'age', 'created_at', 'updated_at'
         ]
@@ -45,6 +46,35 @@ class AnimalSerializer(serializers.ModelSerializer):
             return obj.species.name_uk or obj.species.name
         return ''
 
+    def get_vet_display(self, obj):
+        if obj.vet:
+            return obj.vet.get_full_name()
+        return ''
+
+    def validate_name(self, value):
+        if value.isdigit():
+            raise serializers.ValidationError("Кличка не може складатися лише з цифр.")
+        if len(value) < 2:
+            raise serializers.ValidationError("Кличка занадто коротка.")
+        return value
+
+    def validate_breed(self, value):
+        if value and value.isdigit():
+            raise serializers.ValidationError("Назва породи не може складатися лише з цифр.")
+        return value
+
+    def validate_color(self, value):
+        if value and value.isdigit():
+            raise serializers.ValidationError("Колір не може складатися лише з цифр.")
+        return value
+
+    def validate_birth_date(self, value):
+        if value:
+            from datetime import date
+            if value > date.today():
+                raise serializers.ValidationError("Дата народження не може бути в майбутньому.")
+        return value
+
     def validate_owner(self, value):
         request = self.context.get('request')
         if request and request.user.role == 'client':
@@ -59,7 +89,17 @@ class AnimalSerializer(serializers.ModelSerializer):
         color_name = validated_data.pop('color', None)
         
         if species_name:
-            species_obj, _ = Species.objects.get_or_create(name=species_name)
+            # Мапінг для автоматичного заповнення українських назв
+            names_map = {
+                'dog': 'Собака', 'cat': 'Кіт', 'bird': 'Птах', 
+                'rabbit': 'Кролик', 'horse': 'Кінь', 'hamster': 'Хом\'як'
+            }
+            name_uk = names_map.get(species_name, '')
+            
+            species_obj, _ = Species.objects.get_or_create(
+                name=species_name, 
+                defaults={'name_uk': name_uk}
+            )
             validated_data['species'] = species_obj
             
         if breed_name and species_name:
