@@ -59,7 +59,6 @@ class Animal(models.Model):
     allergies = models.TextField(blank=True, verbose_name='Алергії')
     chronic_diseases = models.TextField(blank=True, verbose_name='Хронічні захворювання')
     notes = models.TextField(blank=True, verbose_name='Нотатки')
-    photo = models.ImageField(upload_to='animals/', null=True, blank=True, verbose_name='Фото')
     vet = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vet_animals', verbose_name='Лікуючий лікар')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

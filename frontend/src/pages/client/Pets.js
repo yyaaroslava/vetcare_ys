@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAnimals, createAnimal, updateAnimal, deleteAnimal } from '../../api/animals';
 import { getVets } from '../../api/auth';
 import { Spinner, Modal, EmptyState, showToast, ConfirmModal } from '../../components/ui';
+import { extractData } from '../../utils/formatters';
 
 // Опції для вибору виду тварини
 const SPECIES_OPTIONS = [
@@ -14,7 +15,7 @@ const SPECIES_OPTIONS = [
 ];
 
 // Початковий стан форми для нової тварини
-const EMPTY = { name:'', species:'dog', custom_species:'', breed:'', gender:'', birth_date:'', weight:'', color:'', allergies:'', chronic_diseases:'', notes:'', chip_number:'', vet:'' };
+const EMPTY = { name:'', species:'dog', custom_species:'', breed:'', gender:'', birth_date:'', weight:'', color:'', allergies:'', chronic_diseases:'', notes:'', vet:'' };
 
 /**
  * Компонент сторінки списку тварин клієнта
@@ -31,12 +32,12 @@ export default function ClientPets() {
   const navigate = useNavigate();
 
   // Функція завантаження списку тварин з сервера
-  const load = () => getAnimals().then(r => setAnimals(r.data.results || r.data)).finally(() => setLoading(false));
+  const load = () => getAnimals().then(r => setAnimals(extractData(r))).finally(() => setLoading(false));
   
   // Завантаження даних при ініціалізації компонента
   useEffect(() => { 
     load(); 
-    getVets().then(r => setVets(r.data.results || r.data)); 
+    getVets().then(r => setVets(extractData(r))); 
     
     // Перевірка action=new у параметрах URL
     const params = new URLSearchParams(window.location.search);

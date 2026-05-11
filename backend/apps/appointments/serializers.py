@@ -76,7 +76,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 ex_end = ex_start + timedelta(minutes=existing.duration)
                 if new_start < ex_end and new_end > ex_start:
                     raise serializers.ValidationError({
-                        'time': 'це время вже зайнято, оберіть іншу дату або час'
+                        'time': 'Цей час вже зайнято, оберіть іншу дату або час'
                     })
 
         # Перевірка, що тварина належить клієнту

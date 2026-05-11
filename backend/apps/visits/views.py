@@ -4,6 +4,10 @@ from .serializers import VisitSerializer
 
 # В'ю для отримання списку візитів та створення нових записів
 class VisitListCreateView(generics.ListCreateAPIView):
+    """
+    Ендпоінт для перегляду журналу медичних візитів та фіксації нових результатів прийому.
+    Фільтрує дані залежно від ролі: лікар бачить лише свої прийоми, клієнт — лише свої.
+    """
     serializer_class = VisitSerializer
 
     def get_queryset(self):
@@ -21,5 +25,6 @@ class VisitListCreateView(generics.ListCreateAPIView):
         return qs
 
 class VisitDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Ендпоінт для перегляду, оновлення або видалення конкретного запису візиту"""
     serializer_class = VisitSerializer
     queryset = Visit.objects.select_related('appointment', 'appointment__animal', 'appointment__vet')

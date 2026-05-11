@@ -1,6 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { authApi } from '../api/auth';
 
+/**
+ * Контекст автентифікації користувача.
+ * Зберігає стан сесії, забезпечує функції входу, виходу та перевірки токена.
+ */
 export const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);

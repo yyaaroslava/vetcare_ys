@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getVisits } from '../../api/visits';
 import { getAnimals } from '../../api/animals';
 import { Spinner, StatusBadge, EmptyState, Modal } from '../../components/ui';
+import { extractData } from '../../utils/formatters';
 
 /**
  * Сторінка перегляду історії візитів для клієнта.
@@ -20,8 +21,8 @@ export default function ClientVisits() {
   // Завантаження даних про візити та тварин при ініціалізації
   useEffect(() => {
     Promise.all([getVisits(), getAnimals()]).then(([v, a]) => {
-      setVisits(v.data.results || v.data);
-      setAnimals(a.data.results || a.data);
+      setVisits(extractData(v));
+      setAnimals(extractData(a));
     }).finally(() => setLoading(false));
   }, []);
 

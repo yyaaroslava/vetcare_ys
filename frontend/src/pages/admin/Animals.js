@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAnimals } from '../../api/animals';
 import { getVets } from '../../api/auth';
-import { Spinner, EmptyState } from '../../components/ui';
+import { Spinner, EmptyState, SearchBar } from '../../components/ui';
 
 /**
  * Сторінка перегляду всіх тварин у системі для адміністратора.
  * Відображає зведену таблицю з інформацією про вид, породу, власника та лікаря.
  */
 
-import { formatAge } from '../../utils/formatters';
+import { formatAge, extractData } from '../../utils/formatters';
 
 export default function AdminAnimals() {
   const [animals, setAnimals] = useState([]);
@@ -25,8 +25,8 @@ export default function AdminAnimals() {
       getAnimals(),
       getVets()
     ]).then(([resAnimals, resVets]) => {
-      setAnimals(resAnimals.data.results || resAnimals.data);
-      setVets(resVets.data.results || resVets.data);
+      setAnimals(extractData(resAnimals));
+      setVets(extractData(resVets));
     }).finally(() => setLoading(false));
   }, []);
 
@@ -65,16 +65,9 @@ export default function AdminAnimals() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-2" style={{ alignItems: 'center' }}>
-        <input className="form-input" style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
-          placeholder="Швидкий пошук"
-          value={search} onChange={e => setSearch(e.target.value)} />
-        {hasFilters && (
-          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterOwner(''); setFilterSpecies(''); setFilterVet(''); }}>
-            Скинути все
-          </button>
-        )}
-      </div>
+      <SearchBar search={search} onSearchChange={setSearch}
+        hasFilters={hasFilters}
+        onReset={() => { setSearch(''); setFilterOwner(''); setFilterSpecies(''); setFilterVet(''); }} />
 
       <div className="card">
         <div className="card-header">
@@ -88,8 +81,11 @@ export default function AdminAnimals() {
             <table>
               <thead style={{ background: 'var(--teal)', color: '#fff' }}>
                 <tr style={{ fontSize: 13 }}>
-                  <th style={{ padding: '12px 16px' }}>ТВАРИНА</th>
-                  <th style={{ padding: '12px 16px' }}>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 4 }}>ТВАРИНА</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 4 }}>ВИД / ПОРОДА</div>
                     <select className="form-select input-xs"
                       value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
@@ -97,7 +93,7 @@ export default function AdminAnimals() {
                       {uniqueSpecies.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </th>
-                  <th style={{ padding: '12px 16px' }}>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 4 }}>ВЛАСНИК</div>
                     <select className="form-select input-xs"
                       value={filterOwner} onChange={e => setFilterOwner(e.target.value)}>
@@ -105,7 +101,7 @@ export default function AdminAnimals() {
                       {uniqueOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                     </select>
                   </th>
-                  <th style={{ padding: '12px 16px' }}>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 4 }}>ЛІКАР</div>
                     <select className="form-select input-xs"
                       value={filterVet} onChange={e => setFilterVet(e.target.value)}>
@@ -113,10 +109,22 @@ export default function AdminAnimals() {
                       {allVets.map(v => <option key={v} value={v}>{v}</option>)}
                     </select>
                   </th>
-                  <th style={{ padding: '12px 16px' }}>ВІК</th>
-                  <th style={{ padding: '12px 16px' }}>ВАГА</th>
-                  <th style={{ padding: '12px 16px' }}>АЛЕРГІЯ</th>
-                  <th style={{ textAlign: 'center', padding: '12px 16px' }}>ДІЇ</th>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 4 }}>ВІК</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 4 }}>ВАГА</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ padding: '12px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 4 }}>АЛЕРГІЯ</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 4 }}>ДІЇ</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
                 </tr>
               </thead>
               <tbody>

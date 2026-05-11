@@ -94,7 +94,7 @@ class FreeSlotView(APIView):
 
         booked = Appointment.objects.filter(
             vet_id=vet_id, date=date,
-            status__in=['pending', 'confirmed']
+            status__in=['pending', 'confirmed', 'completed']
         )
         busy = []
         for a in booked:
@@ -103,17 +103,25 @@ class FreeSlotView(APIView):
             busy.append((start, end))
 
         slots = []
+        now = datetime.now()
         current = datetime.combine(date, dtime(8, 0))
         end_of_day = datetime.combine(date, dtime(17, 0))
         while current < end_of_day:
             slot_end = current + timedelta(minutes=30)
-            is_free = all(
-                current >= b_end or slot_end <= b_start
+            
+            # Слот зайнятий, якщо він перетинається з існуючим записом
+            # або якщо дата сьогоднішня і час слоту вже минув
+            is_busy = any(
+                not (current >= b_end or slot_end <= b_start)
                 for b_start, b_end in busy
             )
+            
+            if date == now.date() and current < now:
+                is_busy = True
+
             slots.append({
                 'time': current.strftime('%H:%M'),
-                'free': is_free
+                'free': not is_busy
             })
             current = slot_end
         return Response(slots)

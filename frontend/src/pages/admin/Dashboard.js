@@ -3,7 +3,12 @@ import { getUsers } from '../../api/auth';
 import { getAnimals } from '../../api/animals';
 import { getAppointments } from '../../api/appointments';
 import { Spinner, StatusBadge, roleLabel, roleBadgeColor, Badge } from '../../components/ui';
+import { extractData } from '../../utils/formatters';
 
+/**
+ * Головна панель адміністратора.
+ * Відображає зведену статистику по користувачах, тваринах та записах на прийом.
+ */
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [animals, setAnimals] = useState([]);
@@ -13,9 +18,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     Promise.all([getUsers(), getAnimals(), getAppointments()])
       .then(([u, a, ap]) => {
-        setUsers(u.data.results || u.data);
-        setAnimals(a.data.results || a.data);
-        setAppointments(ap.data.results || ap.data);
+        setUsers(extractData(u));
+        setAnimals(extractData(a));
+        setAppointments(extractData(ap));
       }).finally(() => setLoading(false));
   }, []);
 
