@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getVisits, createVisit, updateVisit, deleteVisit } from '../../api/visits';
 import { getAnimals } from '../../api/animals';
-import { Spinner, Modal, StatusBadge, EmptyState, showToast, ConfirmModal } from '../../components/ui';
+import { Spinner, Modal, StatusBadge, EmptyState, showToast, ConfirmModal, SearchBar } from '../../components/ui';
+import { formatDate, extractData } from '../../utils/formatters';
+import VaccinationModal from '../../components/ui/VaccinationModal';
 
 /**
  * Журнал медичних візитів для ветеринарного лікаря.
@@ -12,6 +14,7 @@ import { Spinner, Modal, StatusBadge, EmptyState, showToast, ConfirmModal } from
 const EMPTY = { animal: '', visit_date: '', diagnosis: '', prescription: '', status: 'completed', weight_at_visit: '', temperature: '', notes: '' };
 
 export default function VetVisits() {
+  const navigate = useNavigate();
   const [visits, setVisits] = useState([]);
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +22,8 @@ export default function VetVisits() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [confirm, setConfirm] = useState(null);
+  const [vacModal, setVacModal] = useState(false);
+  const [vacData, setVacData] = useState({ animalId: '', ownerId: '' });
   const [saving, setSaving] = useState(false);
   const [detail, setDetail] = useState(null);
   const [search, setSearch] = useState('');
@@ -31,8 +36,8 @@ export default function VetVisits() {
   // Завантаження списку всіх візитів та пацієнтів
   const load = () => {
     Promise.all([getVisits(), getAnimals()]).then(([v, a]) => {
-      setVisits(v.data.results || v.data);
-      setAnimals(a.data.results || a.data);
+      setVisits(extractData(v));
+      setAnimals(extractData(a));
     }).finally(() => setLoading(false));
   };
 
@@ -58,12 +63,15 @@ export default function VetVisits() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data = { ...form };
-      if (!data.weight_at_visit) delete data.weight_at_visit;
-      if (!data.temperature) delete data.temperature;
-      if (editing) await updateVisit(editing.id, data);
-      else await createVisit(data);
-      showToast(editing ? 'Візит оновлено!' : 'Візит зафіксовано!');
+      const visitData = { ...form };
+      delete visitData.status;
+      
+      await updateVisit(editing.id, visitData);
+      if (editing.appointment) {
+        await updateAppointment(editing.appointment, { status: 'completed' });
+      }
+
+      showToast('Візит оновлено!');
       setModal(false); load();
     } catch (err) {
       showToast(Object.values(err.response?.data || {}).flat().join(' ') || 'Помилка', 'error');
@@ -91,12 +99,6 @@ export default function VetVisits() {
     v.diagnosis?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const formatDate = (ds) => {
-    if (!ds) return '—';
-    const parts = ds.split('-');
-    if (parts.length !== 3) return ds;
-    return `${parts[2]}.${parts[1]}.${parts[0]}`;
-  };
 
   filtered.sort((a, b) => {
     const valA = a.visit_date;
@@ -119,20 +121,10 @@ export default function VetVisits() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4" style={{ alignItems: 'center' }}>
-        <input className="form-input" style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
-          placeholder="Швидкий пошук"
-          value={search} onChange={e => setSearch(e.target.value)} />
-        <select className="form-select" style={{ width: 180 }} value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
-          <option value="desc">Спочатку нові</option>
-          <option value="asc">Спочатку старі</option>
-        </select>
-        {(search || filterAnimal || filterOwner || filterStatus || filterDate) && (
-          <button className="btn btn-gray btn-sm" onClick={() => {
-            setSearch(''); setFilterAnimal(''); setFilterOwner(''); setFilterStatus(''); setFilterDate('');
-          }}>Скинути все</button>
-        )}
-      </div>
+      <SearchBar search={search} onSearchChange={setSearch}
+        sortOrder={sortOrder} onSortChange={setSortOrder}
+        hasFilters={!!(search || filterAnimal || filterOwner || filterStatus || filterDate)}
+        onReset={() => { setSearch(''); setFilterAnimal(''); setFilterOwner(''); setFilterStatus(''); setFilterDate(''); }} />
 
       <div className="card">
         <div className="card-header">
@@ -153,7 +145,7 @@ export default function VetVisits() {
                         value={filterDate} onChange={e => setFilterDate(e.target.value)} />
                     </div>
                   </th>
-                  <th style={{ width: 130, padding: '12px 16px' }}>
+                  <th style={{ width: 130, padding: '12px 16px', textAlign: 'center' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>ЧАС</div>
                     <div style={{ height: 32 }}></div>
                   </th>
@@ -196,7 +188,7 @@ export default function VetVisits() {
                       </select>
                     </div>
                   </th>
-                  <th style={{ textAlign: 'center', width: 380, padding: '12px 16px' }}>
+                  <th style={{ textAlign: 'right', width: 380, padding: '12px 24px' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>ДІЇ</div>
                     <div style={{ height: 32 }}></div>
                   </th>
@@ -206,7 +198,7 @@ export default function VetVisits() {
                 {filtered.map(v => (
                   <tr key={v.id}>
                     <td><strong>{formatDate(v.visit_date)}</strong></td>
-                    <td style={{ fontSize: 13, color: 'var(--gray-700)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <td style={{ fontSize: 13, color: 'var(--gray-700)', fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'center' }}>
                       {v.visit_time && v.visit_end_time ? `${v.visit_time} — ${v.visit_end_time}` : (v.visit_time || '—')}
                     </td>
                     <td>{v.animal_name}</td>
@@ -214,7 +206,7 @@ export default function VetVisits() {
                     <td style={{ fontWeight: 600 }}>{v.diagnosis}</td>
                     <td style={{ color: 'var(--gray-600)' }}>{v.prescription || '—'}</td>
                     <td><StatusBadge status={v.status} /></td>
-                    <td style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    <td style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', paddingRight: 24 }}>
                       <button className="btn btn-outline btn-sm" onClick={() => setDetail(v)}>Деталі</button>
                       <button className="btn btn-outline btn-sm" onClick={() => openEdit(v)}>Редагувати</button>
                       <Link to={`/vet/patients/${v.animal}`} className="btn btn-teal" style={{ padding: '6px 12px', fontSize: '11px', textAlign: 'center', lineHeight: 1.2, height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '90px' }}>
@@ -247,15 +239,13 @@ export default function VetVisits() {
           <label className="form-label">Призначення</label>
           <textarea className="form-textarea" value={form.prescription} onChange={e => set('prescription', e.target.value)} placeholder="Препарати, процедури..." />
         </div>
-        <div className="grid-2">
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Вага (кг)</label>
-            <input className="form-input" type="number" step="0.1" value={form.weight_at_visit} onChange={e => set('weight_at_visit', e.target.value)} placeholder="15.0" />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Температура (°C)</label>
-            <input className="form-input" type="number" step="0.1" value={form.temperature} onChange={e => set('temperature', e.target.value)} placeholder="38.5" />
-          </div>
+        <div className="form-group">
+          <button type="button" className="btn btn-outline w-full" onClick={() => {
+            setVacData({ animalId: editing?.animal, ownerId: editing?.owner });
+            setVacModal(true);
+          }}>
+            Зареєструвати вакцинацію
+          </button>
         </div>
         <div className="form-group mt-4">
           <label className="form-label">Нотатки</label>
@@ -313,7 +303,14 @@ export default function VetVisits() {
       </Modal>
 
       <ConfirmModal open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete}
-        title="Видалити візит?" message={`Ви впевнені, що хочете видалити медичний запис для ${confirm?.animal_name} від ${confirm?.visit_date}?`} danger />
+        title="Видалити візит?" message="Ви впевнені, що хочете видалити цей запис? Цю дію неможливо скасувати." danger />
+
+      <VaccinationModal
+        open={vacModal}
+        onClose={() => setVacModal(false)}
+        initialAnimalId={vacData.animalId}
+        initialOwnerId={vacData.ownerId}
+      />
     </div>
   );
 }

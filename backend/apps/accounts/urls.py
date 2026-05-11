@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import RegisterView, LoginView, LogoutView, MeView, VetListView, ClientListView, UserViewSet
+from .permissions import IsVetOrAdmin
 
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')

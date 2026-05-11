@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/auth';
-import { Spinner, Modal, EmptyState, showToast, ConfirmModal, Badge, roleLabel, roleBadgeColor } from '../../components/ui';
+import { Spinner, Modal, EmptyState, showToast, ConfirmModal, Badge, roleLabel, roleBadgeColor, SearchBar } from '../../components/ui';
+import { formatDate, extractData } from '../../utils/formatters';
 
 const EMPTY = { email: '', first_name: '', last_name: '', phone: '+380', role: 'client', password: '' };
 
@@ -19,7 +20,7 @@ export default function AdminUsers() {
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('');
 
-  const load = () => getUsers().then(r => setUsers(r.data.results || r.data)).finally(() => setLoading(false));
+  const load = () => getUsers().then(r => setUsers(extractData(r))).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   const openAdd = () => {
@@ -58,8 +59,7 @@ export default function AdminUsers() {
   if (loading) return <Spinner />;
 
   let filtered = users;
-  if (search) filtered = filtered.filter(u => `${u.first_name} ${u.last_name} ${u.email}`.toLowerCase().includes(search.toLowerCase()));
-  if (filterRole) filtered = filtered.filter(u => u.role === filterRole);
+  if (search) filtered = filtered.filter(u => `${u.first_name} ${u.last_name} ${u.email} ${u.phone || ''}`.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="page-container">
@@ -71,16 +71,9 @@ export default function AdminUsers() {
         <button className="btn btn-teal" onClick={openAdd}>+ Додати</button>
       </div>
 
-      <div className="flex gap-2 mb-2" style={{ alignItems: 'center' }}>
-        <input className="form-input" style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
-          placeholder="Швидкий пошук"
-          value={search} onChange={e => setSearch(e.target.value)} />
-        {(search || filterRole) && (
-          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterRole(''); }}>
-            Скинути все
-          </button>
-        )}
-      </div>
+      <SearchBar search={search} onSearchChange={setSearch}
+        hasFilters={!!(search || filterRole)}
+        onReset={() => { setSearch(''); setFilterRole(''); }} />
 
       <div className="card">
         <div className="card-header">
@@ -91,18 +84,22 @@ export default function AdminUsers() {
         {filtered.length === 0
           ? <div className="card-body"><EmptyState icon="" title="Користувачів не знайдено" /></div>
           : <div className="table-wrap">
-            <table>
+            <table style={{ tableLayout: 'fixed', width: '100%' }}>
               <thead style={{ background: 'var(--teal)', color: '#fff' }}>
                 <tr style={{ fontSize: 14 }}>
-                  <th style={{ padding: '10px 16px', verticalAlign: 'top' }}>
+                  <th style={{ width: '16.66%', padding: '10px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>КОРИСТУВАЧ</div>
                     <div style={{ height: 28 }}></div>
                   </th>
-                  <th style={{ padding: '10px 16px', verticalAlign: 'top' }}>
+                  <th style={{ width: '16.66%', padding: '10px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>EMAIL</div>
                     <div style={{ height: 28 }}></div>
                   </th>
-                  <th style={{ width: 160, padding: '10px 16px', verticalAlign: 'top' }}>
+                  <th style={{ width: '16.66%', padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ТЕЛЕФОН</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ width: '16.66%', padding: '10px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>РОЛЬ</div>
                     <select className="form-select input-xs"
                       value={filterRole} onChange={e => setFilterRole(e.target.value)}>
@@ -112,7 +109,11 @@ export default function AdminUsers() {
                       <option value="client">Клієнт</option>
                     </select>
                   </th>
-                  <th style={{ textAlign: 'center', width: 200, padding: '10px 16px', verticalAlign: 'top' }}>
+                  <th style={{ width: '16.66%', padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>РЕЄСТРАЦІЯ</div>
+                    <div style={{ height: 28 }}></div>
+                  </th>
+                  <th style={{ width: '16.66%', textAlign: 'center', padding: '10px 16px', verticalAlign: 'top' }}>
                     <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ДІЇ</div>
                     <div style={{ height: 28 }}></div>
                   </th>
@@ -132,7 +133,9 @@ export default function AdminUsers() {
                         </div>
                       </td>
                       <td>{u.email}</td>
+                      <td>{u.phone || '—'}</td>
                       <td><Badge color={roleBadgeColor(u.role)}>{roleLabel(u.role)}</Badge></td>
+                      <td>{u.created_at ? formatDate(u.created_at.split('T')[0]) : '—'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                           <button className="btn btn-outline btn-sm" onClick={() => openEdit(u)}>Редагувати</button>

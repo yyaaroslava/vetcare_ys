@@ -7,11 +7,13 @@ const menus = {
     { to: '/client', label: 'Головна', end: true },
     { to: '/client/pets', label: 'Мої тварини' },
     { to: '/client/appointments', label: 'Записи на прийом' },
+    { to: '/client/vaccinations', label: 'Вакцинації' },
   ],
   doctor: [
     { to: '/vet', label: 'Головна', end: true },
     { to: '/vet/schedule', label: 'Розклад прийомів' },
     { to: '/vet/patients', label: 'Пацієнти' },
+    { to: '/vet/vaccinations', label: 'Вакцинації' },
     { to: '/vet/visits', label: 'Журнал візитів' },
   ],
   admin: [

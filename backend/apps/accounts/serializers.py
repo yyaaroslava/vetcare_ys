@@ -11,12 +11,16 @@ def validate_name_field(value, field_name):
         raise serializers.ValidationError(f"{field_name}: Цифри недозволені")
     return value
 
-# Обробка та валідація номера телефону
+# Обробка та валідація номера телефону у форматі +380XXXXXXXXX
 def validate_ua_phone(value):
     if not value:
         return value
-    # Очищення від пробілів та дефісів для збереження в єдиному форматі
-    return value.replace(' ', '').replace('-', '')
+    cleaned = re.sub(r'[\s()\-]', '', value)
+    if not re.match(r'^\+380\d{9,}$', cleaned):
+        raise serializers.ValidationError(
+            "Невірний формат. Коректний: +380XXXXXXXXX (9 цифр після +380)"
+        )
+    return cleaned
 
 # Основний серіалізатор користувача: керує даними профілю, паролями та ролями
 class UserSerializer(serializers.ModelSerializer):
@@ -35,19 +39,15 @@ class UserSerializer(serializers.ModelSerializer):
         return validate_name_field(value, "Прізвище")
 
     def validate_phone(self, value):
-        if not value or len(value) < 10:
-             raise serializers.ValidationError("Номер телефону обов'язковий (мін. 10 цифр)")
-        cleaned = value.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-        if len(cleaned) > 13:
-             raise serializers.ValidationError("Номер телефону занадто довгий (макс. 13 символів, напр. +380XXXXXXXXX)")
-        digits = cleaned.lstrip('+')
-        if not digits.isdigit():
-             raise serializers.ValidationError("Номер телефону може містити лише цифри та символ +")
         return validate_ua_phone(value)
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        # Генерація username
+        role = validated_data.get('role', 'client')
+        
+        # Автоматично ставимо is_staff для лікарів та адмінів для сумісності з Django
+        is_staff = role in ['doctor', 'admin']
+        
         base_username = validated_data['email'].split('@')[0]
         username = base_username
         counter = 1
@@ -55,7 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
             username = f"{base_username}{counter}"
             counter += 1
         
-        user = User.objects.create_user(username=username, **validated_data)
+        user = User.objects.create_user(username=username, is_staff=is_staff, **validated_data)
         if password:
             user.set_password(password)
             user.save()
@@ -63,6 +63,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
+        role = validated_data.get('role')
+        
+        if role is not None:
+            instance.is_staff = role in ['doctor', 'admin']
+            
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:
@@ -87,14 +92,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         return validate_name_field(value, "Прізвище")
 
     def validate_phone(self, value):
-        if len(value) < 10:
-             raise serializers.ValidationError("Номер телефону обов'язковий (мін. 10 цифр)")
-        cleaned = value.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-        if len(cleaned) > 13:
-             raise serializers.ValidationError("Номер телефону занадто довгий (макс. 13 символів, напр. +380XXXXXXXXX)")
-        digits = cleaned.lstrip('+')
-        if not digits.isdigit():
-             raise serializers.ValidationError("Номер телефону може містити лише цифри та символ +")
         return validate_ua_phone(value)
 
     def validate(self, data):

@@ -33,3 +33,30 @@ export function formatAge(birthDateStr) {
   
   return `${years} ${yearStr}`;
 }
+
+/**
+ * Перетворює дату ISO (2023-12-31) у формат DD.MM.YYYY
+ */
+export function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+/**
+ * Перетворює час (14:30:00) у формат HH:MM
+ */
+export function formatTime(timeStr) {
+  if (!timeStr) return '—';
+  return timeStr.split(':').slice(0, 2).map(x => x.padStart(2, '0')).join(':');
+}
+
+/**
+ * Витягує масив даних із відповіді API (підтримує пагіновані та звичайні відповіді).
+ * Замінює повторюваний патерн: response.data.results || response.data
+ * @param {object} response - Відповідь Axios
+ * @returns {Array} - Масив даних
+ */
+export function extractData(response) {
+  return response.data.results || response.data;
+}

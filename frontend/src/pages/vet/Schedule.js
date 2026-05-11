@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { getAppointments, cancelAppointment, updateAppointment, createAppointment, getFreeSlots } from '../../api/appointments';
 import { getClients, getVets } from '../../api/auth';
 import { getAnimals } from '../../api/animals';
-import { Spinner, StatusBadge, EmptyState, showToast, ConfirmModal, Modal } from '../../components/ui';
+import { Modal, StatusBadge, Spinner, ConfirmModal, EmptyState, showToast, TimeSlotGrid } from '../../components/ui';
+import { formatDate, formatTime, extractData } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 
 /**
@@ -73,14 +74,14 @@ export default function VetSchedule() {
   const [saving, setSaving] = useState(false);
 
   const load = () => {
-    getAppointments().then(r => setAppointments(r.data.results || r.data)).finally(() => setLoading(false));
+    getAppointments().then(r => setAppointments(extractData(r))).finally(() => setLoading(false));
   };
 
   useEffect(() => {
     load();
-    getClients().then(r => setClients(r.data.results || r.data));
-    getAnimals().then(r => setAllAnimals(r.data.results || r.data));
-    getVets().then(r => setVets(r.data.results || r.data));
+    getClients().then(r => setClients(extractData(r)));
+    getAnimals().then(r => setAllAnimals(extractData(r)));
+    getVets().then(r => setVets(extractData(r)));
   }, []);
 
   /**
@@ -132,7 +133,7 @@ export default function VetSchedule() {
     }
     setSaving(true);
     try {
-      await createAppointment(addForm);
+      await createAppointment({ ...addForm, status: 'confirmed' });
       showToast('Прийом створено!');
       setAddModal(false);
       setAddForm({ client: '', animal: '', date: '', time: '', duration: 60, description: '', vet: '' });
@@ -157,24 +158,14 @@ export default function VetSchedule() {
     if (timeFilter === 'all') filtered = filtered.filter(a => a.date >= todayStr);
   }
 
-  const formatDate = (ds) => {
-    if (!ds) return '—';
-    const [y, m, d] = ds.split('-');
-    return `${d}.${m}.${y}`;
-  };
 
-  const formatTime = (ts) => {
-    if (!ts) return '—';
-    return ts.split(':').slice(0, 2).map(x => x.padStart(2, '0')).join(':');
-  };
+  if (loading) return <Spinner />;
 
   filtered.sort((a, b) => {
     const valA = `${a.date} ${a.time || '00:00'}`;
     const valB = `${b.date} ${b.time || '00:00'}`;
     return sortOrder === 'desc' ? valB.localeCompare(valA) : valA.localeCompare(valB);
   });
-
-  if (loading) return <Spinner />;
 
   return (
     <div className="page-container">
@@ -313,32 +304,12 @@ export default function VetSchedule() {
         </div>
         <div className="form-group">
           <label className="form-label">Час * <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 400 }}>(08:00–17:00)</span></label>
-          {slotsLoading ? <div style={{ fontSize: 13, color: 'var(--gray-400)' }}>Завантаження вільних слотів...</div>
-            : (
-              <div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                  {Array.from({ length: 19 }, (_, i) => {
-                    const h = Math.floor(i / 2) + 8;
-                    const m = i % 2 === 0 ? '00' : '30';
-                    const time = `${String(h).padStart(2, '0')}:${m}`;
-
-                    const apiSlot = slots.find(s => s.time.slice(0, 5) === time || s.time === time);
-                    const isFree = slots.length > 0 ? (apiSlot ? apiSlot.free : false) : (h < 17);
-
-                    return (
-                      <button key={time} type="button"
-                        onClick={() => isFree && setAddForm(f => ({ ...f, time }))}
-                        className={`btn btn-sm ${time === addForm.time ? 'btn-teal' : isFree ? 'btn-outline' : 'btn-gray'}`}
-                        disabled={!isFree}
-                        style={{ opacity: isFree ? 1 : 0.4, cursor: isFree ? 'pointer' : 'not-allowed' }}>
-                        {time}{!isFree ? ' ✕' : ''}
-                      </button>
-                    );
-                  })}
-                </div>
-                {addForm.time && <div style={{ fontSize: 12, color: 'var(--teal)', fontWeight: 700 }}>✓ Обрано: {addForm.time}</div>}
-              </div>
-            )}
+          <TimeSlotGrid 
+            slots={slots} 
+            selectedTime={addForm.time} 
+            onSelect={time => setAddForm(f => ({ ...f, time }))} 
+            loading={slotsLoading} 
+          />
         </div>
       </Modal>
 

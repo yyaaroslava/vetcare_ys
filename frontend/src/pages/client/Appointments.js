@@ -4,7 +4,9 @@ import api from '../../api/axios';
 import { getAppointments, createAppointment, cancelAppointment } from '../../api/appointments';
 import { getAnimals } from '../../api/animals';
 import { getVets } from '../../api/auth';
-import { Spinner, Modal, StatusBadge, EmptyState, showToast, ConfirmModal, speciesEmoji } from '../../components/ui';
+import { Modal, StatusBadge, Spinner, ConfirmModal, TimeSlotGrid, EmptyState, showToast, SearchBar } from '../../components/ui';
+import { formatDate, formatTime, extractData } from '../../utils/formatters';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Сторінка керування записами на прийом для клієнта.
@@ -13,7 +15,6 @@ import { Spinner, Modal, StatusBadge, EmptyState, showToast, ConfirmModal, speci
 
 const TODAY = new Date();
 const MONTHS_UK = ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'];
-const DAYS_UK = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 /**
  * Компонент міні-календаря для візуалізації дат записів.
@@ -79,6 +80,7 @@ function MiniCalendar({ appointments, onSelect, selected }) {
 }
 
 export default function ClientAppointments() {
+  const { user } = useAuth();
   const location = useLocation();
   const [appointments, setAppointments] = useState([]);
   const [animals, setAnimals] = useState([]);
@@ -108,12 +110,12 @@ export default function ClientAppointments() {
   /**
    * Завантаження даних: записи, тварини та доступні лікарі.
    */
-  const load = () => getAppointments().then(r => setAppointments(r.data.results || r.data)).finally(() => setLoading(false));
+  const load = () => getAppointments().then(r => setAppointments(extractData(r))).finally(() => setLoading(false));
 
   useEffect(() => {
     load();
-    getAnimals().then(r => setAnimals(r.data.results || r.data));
-    getVets().then(r => setVets(r.data.results || r.data));
+    getAnimals().then(r => setAnimals(extractData(r)));
+    getVets().then(r => setVets(extractData(r)));
   }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -150,7 +152,12 @@ export default function ClientAppointments() {
 
     setSaving(true);
     try {
-      await createAppointment(form);
+      const payload = { ...form };
+      if (user?.role === 'doctor') {
+        payload.status = 'confirmed';
+      }
+      
+      await createAppointment(payload);
       showToast('Запис успішно створено!');
       setModal(false);
       setForm({ animal: '', vet: '', date: '', time: '', description: '' });
@@ -176,11 +183,11 @@ export default function ClientAppointments() {
   };
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const [filterType, setFilterType] = useState('upcoming'); // upcoming, history, all
+  const [filterType, setFilterType] = useState('upcoming'); // майбутні, історія, усі
   const [filterDate, setFilterDate] = useState('');
   const [sortOrder, setSortOrder] = useState('desc'); // desc = нові зверху, asc = старі зверху
 
-  // Handle action=new from Dashboard
+  // Обробка параметра action=new з Головної сторінки
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('action') === 'new') {
@@ -191,13 +198,13 @@ export default function ClientAppointments() {
   if (loading) return <Spinner />;
 
   const filteredTable = appointments.filter(a => {
-    // Selected Date from Calendar
+    // Обрана дата з календаря
     if (selectedDate && a.date !== selectedDate) return false;
 
-    // Filter by Date input
+    // Фільтрація за обраною датою
     if (filterDate && a.date !== filterDate) return false;
 
-    // Filter by Type: history, today, upcoming, all
+    // Фільтрація за типом: історія, сьогодні, майбутні, усі
     if (filterType === 'today') if (a.date !== todayStr) return false;
     if (filterType === 'upcoming') if (a.date <= todayStr) return false;
     if (filterType === 'history') if (!(a.date < todayStr || a.status === 'cancelled')) return false;
@@ -222,17 +229,6 @@ export default function ClientAppointments() {
   const upcoming = appointments
     .filter(a => ['pending', 'confirmed'].includes(a.status) && a.date >= todayStr)
     .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
-
-  const formatDate = (ds) => {
-    if (!ds) return '—';
-    const [y, m, d] = ds.split('-');
-    return `${d}.${m}.${y}`;
-  };
-
-  const formatTime = (ts) => {
-    if (!ts) return '—';
-    return ts.split(':').slice(0, 2).map(x => x.padStart(2, '0')).join(':');
-  };
 
   return (
     <div className="page-container">
@@ -294,25 +290,10 @@ export default function ClientAppointments() {
       </div>
 
       {/* Таблиця всіх записів */}
-      <div className="flex gap-2 mb-4" style={{ alignItems: 'center' }}>
-        <input className="form-input" style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
-          placeholder="Швидкий пошук"
-          value={search} onChange={e => setSearch(e.target.value)} />
-        <select
-          className="form-select"
-          style={{ width: 140 }}
-          value={sortOrder}
-          onChange={e => setSortOrder(e.target.value)}
-        >
-          <option value="desc">Спочатку нові</option>
-          <option value="asc">Спочатку старі</option>
-        </select>
-        {(search || filterDate || filterStatus) && (
-          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterDate(''); setFilterStatus(''); }}>
-            Скинути все
-          </button>
-        )}
-      </div>
+      <SearchBar search={search} onSearchChange={setSearch}
+        sortOrder={sortOrder} onSortChange={setSortOrder}
+        hasFilters={!!(search || filterDate || filterStatus)}
+        onReset={() => { setSearch(''); setFilterDate(''); setFilterStatus(''); }} />
 
       <div className="card mt-4">
         <div className="card-header">
@@ -395,31 +376,12 @@ export default function ClientAppointments() {
         </div>
         <div className="form-group">
           <label className="form-label">Час * <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 400 }}>(08:00–17:00)</span></label>
-          {slotsLoading ? <div style={{ fontSize: 13, color: 'var(--gray-400)' }}>Завантаження вільних слотів...</div>
-            : (
-              <div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                  {Array.from({ length: 19 }, (_, i) => {
-                    const h = Math.floor(i / 2) + 8;
-                    const m = i % 2 === 0 ? '00' : '30';
-                    return `${String(h).padStart(2, '0')}:${m}`;
-                  }).map(time => {
-                    const apiSlot = slots.find(s => s.time.slice(0, 5) === time || s.time === time);
-                    const isFree = slots.length > 0 ? (apiSlot ? apiSlot.free : false) : true;
-                    return (
-                      <button key={time} type="button"
-                        onClick={() => isFree && set('time', time)}
-                        className={`btn btn-sm ${time === form.time ? 'btn-teal' : isFree ? 'btn-outline' : 'btn-gray'}`}
-                        disabled={!isFree}
-                        style={{ opacity: isFree ? 1 : 0.4, cursor: isFree ? 'pointer' : 'not-allowed' }}>
-                        {time}{!isFree ? ' ✕' : ''}
-                      </button>
-                    );
-                  })}
-                </div>
-                {form.time && <div style={{ fontSize: 12, color: 'var(--teal)', fontWeight: 700 }}>✓ Обрано: {form.time}</div>}
-              </div>
-            )}
+          <TimeSlotGrid 
+            slots={slots} 
+            selectedTime={form.time} 
+            onSelect={time => set('time', time)} 
+            loading={slotsLoading} 
+          />
         </div>
         <div className="form-group">
           <label className="form-label">Опис проблеми</label>

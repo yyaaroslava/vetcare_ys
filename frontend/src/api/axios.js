@@ -1,5 +1,9 @@
 import axios from 'axios';
 
+/**
+ * Конфігурація HTTP-клієнта Axios.
+ * Автоматично додає JWT-токен до запитів та оновлює його при закінченні терміну дії.
+ */
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 const api = axios.create({ baseURL: API_BASE });

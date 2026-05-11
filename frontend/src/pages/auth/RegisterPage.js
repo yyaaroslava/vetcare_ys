@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../api/auth';
 
+/**
+ * Сторінка реєстрації нового користувача (клієнта).
+ * Включає валідацію імені, прізвища, телефону та пароля.
+ */
 const RegisterPage = () => {
   const [form, setForm] = useState({ 
     email: '', 

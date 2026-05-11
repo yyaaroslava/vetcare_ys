@@ -4,10 +4,15 @@ import { getAnimal, updateAnimal } from '../../api/animals';
 import { getVets, getMe, updateMe } from '../../api/auth';
 import { getAppointments, updateAppointment, cancelAppointment } from '../../api/appointments';
 import { getVisits } from '../../api/visits';
+import { getVaccinations } from '../../api/vaccinations';
 import { Spinner, Modal, StatusBadge, showToast, ConfirmModal } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
-import { formatAge } from '../../utils/formatters';
+import { formatAge, formatDate, formatTime, extractData } from '../../utils/formatters';
 
+/**
+ * Медична картка тварини (пацієнта).
+ * Відображає повну інформацію: дані тварини, власника, історію візитів, вакцинацій та записів на прийом.
+ */
 const TruncatedText = ({ text, maxLength = 60 }) => {
   const [expanded, setExpanded] = useState(false);
   if (!text) return '—';
@@ -37,10 +42,15 @@ export default function ClientMedCard() {
   const [animal, setAnimal] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [visits, setVisits] = useState([]);
+  const [vaccinations, setVaccinations] = useState([]);
   const [vets, setVets] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('visits');
+  const [activeTab, setActiveTab] = useState('vaccinations');
+  
+  const [vacSearch, setVacSearch] = useState('');
+  const [vacDate, setVacDate] = useState('');
+  const [vacStatus, setVacStatus] = useState('');
 
   const [editAnimal, setEditAnimal] = useState(null);
   const [editOwner, setEditOwner] = useState(null);
@@ -61,13 +71,15 @@ export default function ClientMedCard() {
       getAnimal(id),
       getAppointments({ animal: id }),
       getVisits({ animal: id }),
+      getVaccinations({ animal: id }),
       getVets(),
       getMe()
-    ]).then(([a, aps, vis, vts, me]) => {
+    ]).then(([a, aps, vis, vacs, vts, me]) => {
       setAnimal(a.data);
-      setAppointments(aps.data.results || aps.data);
-      setVisits(vis.data.results || vis.data);
-      setVets(vts.data.results || vts.data);
+      setAppointments(extractData(aps));
+      setVisits(extractData(vis));
+      setVaccinations(extractData(vacs));
+      setVets(extractData(vts));
       setUserProfile(me.data);
     })
     .catch(err => {
@@ -259,12 +271,18 @@ export default function ClientMedCard() {
                            <StatusBadge status={a.status} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          {!isAdmin && isVet && a.status === 'pending' && (
-                            <button className="btn btn-teal btn-sm" style={{ borderRadius: 8, padding: '8px 16px' }} onClick={() => handleStatusChange(a, 'confirmed')}>Підтвердити</button>
+                          {!isAdmin && isVet && (a.status === 'pending' || a.status === 'confirmed') && (
+                            <button 
+                              className="btn btn-teal btn-sm" 
+                              style={{ borderRadius: 8, padding: '8px 16px', width: 120 }} 
+                              onClick={() => handleStatusChange(a, 'confirmed')}
+                            >
+                              Підтвердити
+                            </button>
                           )}
                           {!isAdmin && (isVet || ['pending', 'confirmed'].includes(a.status)) && (
-                            <button className="btn btn-red btn-sm" style={{ borderRadius: 8, padding: '8px 16px' }} onClick={() => setCancelTarget(a)}>
-                              {isVet && a.status === 'pending' ? 'Відхилити' : 'Скасувати'}
+                            <button className="btn btn-red btn-sm" style={{ borderRadius: 8, padding: '8px 16px', width: 120 }} onClick={() => setCancelTarget(a)}>
+                              Відхилити
                             </button>
                           )}
                         </div>
@@ -296,7 +314,7 @@ export default function ClientMedCard() {
                 transition: 'all 0.2s'
               }}
             >
-              Вакцинації (0)
+              Вакцинації ({vaccinations.length})
             </button>
             <button 
               onClick={() => setActiveTab('visits')}
@@ -321,7 +339,77 @@ export default function ClientMedCard() {
           </div>
 
           <div className="card">
-            {activeTab === 'visits' ? (
+            {activeTab === 'vaccinations' ? (
+              <>
+                <div className="card-header" style={{borderBottom: 'none'}}>
+                  <div className="card-title" style={{fontSize: 16}}>Журнал вакцинацій</div>
+                  <div className="badge badge-green">
+                    {vaccinations.filter(v => 
+                      (!vacDate || v.date_given === vacDate) && 
+                      (!vacStatus || v.status === vacStatus) &&
+                      v.vaccine_name.toLowerCase().includes(vacSearch.toLowerCase())
+                    ).length} записів
+                  </div>
+                </div>
+                {vaccinations.length === 0 ? (
+                  <div style={{textAlign:'center', padding: 40, color:'var(--gray-400)'}}>Дані про вакцинації відсутні</div>
+                ) : (
+                  <div className="table-wrap">
+                    <table style={{width: '100%'}}>
+                      <thead style={{background: 'var(--teal)'}}>
+                        <tr style={{fontSize:13}}>
+                          <th style={{padding: '12px 20px', textAlign: 'left', color: '#fff', fontWeight: 600}}>
+                            <div>ДАТА</div>
+                            <input 
+                              type="date" 
+                              value={vacDate} 
+                              onChange={e => setVacDate(e.target.value)}
+                              style={{marginTop: 8, width: 110, height: 30, fontSize: 12, padding: '0 8px', borderRadius: 10, border: 'none', color: 'var(--gray-800)', background: '#fff'}}
+                            />
+                          </th>
+                          <th style={{padding: '12px 20px', textAlign: 'left', color: '#fff', fontWeight: 600}}>
+                            <div>НАЗВА ВАКЦИНИ</div>
+                            <input 
+                              placeholder="Пошук..." 
+                              value={vacSearch} 
+                              onChange={e => setVacSearch(e.target.value)}
+                              style={{marginTop: 8, width: 140, height: 30, fontSize: 12, padding: '0 10px', borderRadius: 10, border: 'none', color: 'var(--gray-800)', background: '#fff'}}
+                            />
+                          </th>
+                          <th style={{padding: '12px 20px', textAlign: 'left', color: '#fff', fontWeight: 600}}>
+                            <div>СТАТУС</div>
+                            <select 
+                              value={vacStatus} 
+                              onChange={e => setVacStatus(e.target.value)}
+                              style={{marginTop: 8, width: 110, height: 30, fontSize: 12, padding: '0 5px', borderRadius: 10, border: 'none', color: 'var(--gray-800)', background: '#fff', cursor: 'pointer'}}
+                            >
+                              <option value="">Всі</option>
+                              <option value="done">Виконано</option>
+                              <option value="planned">Заплановано</option>
+                            </select>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vaccinations
+                          .filter(v => 
+                            (!vacDate || v.date_given === vacDate) && 
+                            (!vacStatus || v.status === vacStatus) &&
+                            v.vaccine_name.toLowerCase().includes(vacSearch.toLowerCase())
+                          )
+                          .map(v => (
+                          <tr key={v.id} style={{borderBottom: '1px solid var(--gray-100)'}}>
+                            <td style={{padding: '16px 20px', fontSize: 14, fontWeight: 600}}>{formatDate(v.date_given)}</td>
+                            <td style={{padding: '16px 20px', fontSize: 14}}>{v.vaccine_name}</td>
+                            <td style={{padding: '16px 20px'}}><StatusBadge status={v.status} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            ) : (
               <>
                 <div className="card-header" style={{borderBottom: 'none', flexWrap: 'wrap', gap: 12}}>
                   <div className="card-title" style={{display:'flex', alignItems:'center', gap: 8, fontSize: 16}}>
@@ -361,8 +449,8 @@ export default function ClientMedCard() {
                           .filter(v => !visitDateFilter || v.visit_date === visitDateFilter)
                           .map(v => (
                           <tr key={v.id} style={{borderBottom: '1px solid var(--gray-100)'}}>
-                            <td style={{padding: '16px 20px', fontSize: 14, fontWeight: 600}}>{v.visit_date}</td>
-                            <td style={{padding: '16px 20px', fontSize: 13, color: 'var(--gray-500)'}}>{v.visit_time ? v.visit_time.slice(0,5) : '—'}</td>
+                            <td style={{padding: '16px 20px', fontSize: 14, fontWeight: 600}}>{formatDate(v.visit_date)}</td>
+                            <td style={{padding: '16px 20px', fontSize: 13, color: 'var(--gray-500)'}}>{formatTime(v.visit_time)}</td>
                             <td style={{padding: '16px 20px', fontSize: 14, maxWidth: 200}}><TruncatedText text={v.diagnosis} /></td>
                             <td style={{padding: '16px 20px', fontSize: 14, maxWidth: 200}}><TruncatedText text={v.prescription} /></td>
                             <td style={{padding: '16px 20px', fontSize: 14}}>{v.vet_name}</td>
@@ -374,10 +462,6 @@ export default function ClientMedCard() {
                   </div>
                 )}
               </>
-            ) : (
-              <div style={{textAlign:'center', padding: 60, color:'var(--gray-400)'}}>
-                <div style={{fontSize: 16, fontWeight: 700, color: 'var(--gray-600)'}}>Дані про вакцинації відсутні</div>
-              </div>
             )}
           </div>
         </div>

@@ -18,9 +18,9 @@ class AnimalListCreateView(generics.ListCreateAPIView):
     search_fields = ['name', 'breed__name', 'owner__first_name', 'owner__last_name']
 
     def get_queryset(self):
-        """Фільтрація списку: клієнти бачать лише своїх тварин, лікарі — усіх"""
+        """Фільтрація списку: клієнти бачать лише своїх тварин, лікарі та адміни — усіх"""
         user = self.request.user
-        if user.is_staff or user.is_superuser:
+        if user.is_staff or user.is_superuser or user.role in ['doctor', 'admin']:
             return Animal.objects.select_related('owner')
         return Animal.objects.filter(owner=user)
 

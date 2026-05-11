@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAnimals, updateAnimal } from '../../api/animals';
-import { Spinner, Modal, EmptyState, showToast } from '../../components/ui';
+import { Spinner, Modal, EmptyState, showToast, SearchBar } from '../../components/ui';
+import { extractData } from '../../utils/formatters';
 
 /**
  * Сторінка списку пацієнтів для ветеринара
@@ -18,7 +19,7 @@ export default function VetPatients() {
   const [filterOwner, setFilterOwner] = useState('');
   const [filterAnimal, setFilterAnimal] = useState('');
 
-  const load = () => getAnimals().then(r => setAnimals(r.data.results || r.data)).finally(() => setLoading(false));
+  const load = () => getAnimals().then(r => setAnimals(extractData(r))).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   const openEdit = a => {
@@ -70,20 +71,9 @@ export default function VetPatients() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4" style={{ alignItems: 'center' }}>
-        <input
-          className="form-input"
-          style={{ flex: 1, maxWidth: 500, fontSize: 16 }}
-          placeholder="Швидкий пошук"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        {(search || filterOwner || filterAnimal) && (
-          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterOwner(''); setFilterAnimal(''); }}>
-            Скинути все
-          </button>
-        )}
-      </div>
+      <SearchBar search={search} onSearchChange={setSearch}
+        hasFilters={!!(search || filterOwner || filterAnimal)}
+        onReset={() => { setSearch(''); setFilterOwner(''); setFilterAnimal(''); }} />
 
       <div className="card">
         <div className="card-header">
@@ -96,35 +86,35 @@ export default function VetPatients() {
             <table>
               <thead style={{ background: 'var(--teal)', color: '#fff' }}>
                 <tr style={{ verticalAlign: 'top' }}>
-                  <th style={{ width: '15%', padding: '12px 16px' }}>
+                  <th style={{ width: '20%', padding: '12px 16px' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>ПАЦІЄНТ</div>
                     <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
-                      <select className="form-select input-xs"
+                      <select className="form-select input-xs" style={{ width: '100%' }}
                         value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
                         <option value="">Всі тварини</option>
                         {displayAnimals.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                       </select>
                     </div>
                   </th>
-                  <th style={{ width: '15%', padding: '12px 16px' }}>
+                  <th style={{ width: '20%', padding: '12px 16px' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>ВЛАСНИК</div>
                     <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
-                      <select className="form-select input-xs"
+                      <select className="form-select input-xs" style={{ width: '100%' }}
                         value={filterOwner} onChange={e => { setFilterOwner(e.target.value); setFilterAnimal(''); }}>
                         <option value="">Всі власники</option>
                         {uniqueOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                       </select>
                     </div>
                   </th>
-                  <th style={{ width: '18%', padding: '12px 16px' }}>
+                  <th style={{ width: '20%', padding: '12px 16px' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>СТАН ЗДОРОВ'Я</div>
                     <div style={{ height: 32 }}></div>
                   </th>
-                  <th style={{ width: '37%', padding: '12px 16px' }}>
+                  <th style={{ width: '20%', padding: '12px 16px' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>НОТАТКИ ЛІКАРЯ</div>
                     <div style={{ height: 32 }}></div>
                   </th>
-                  <th style={{ textAlign: 'center', width: '15%', padding: '12px 16px' }}>
+                  <th style={{ textAlign: 'center', width: 240, padding: '12px 40px 12px 16px' }}>
                     <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.9, marginBottom: 8 }}>ДІЇ</div>
                     <div style={{ height: 32 }}></div>
                   </th>
@@ -133,7 +123,7 @@ export default function VetPatients() {
               <tbody>
                 {filtered.map(a => (
                   <tr key={a.id}>
-                    <td>
+                    <td style={{ width: '20%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div>
                           <div style={{ fontWeight: 800, color: 'var(--gray-900)' }}>{a.name}</div>
@@ -141,10 +131,10 @@ export default function VetPatients() {
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td style={{ width: '20%' }}>
                       <div style={{ fontWeight: 700, color: 'var(--gray-800)', fontSize: 13 }}>{a.owner_name}</div>
                     </td>
-                    <td>
+                    <td style={{ width: '20%' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {a.allergies ? (
                           <span className="badge badge-red" style={{ fontSize: 11, padding: '2px 8px', maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={a.allergies}>
@@ -159,17 +149,17 @@ export default function VetPatients() {
                         {!a.allergies && !a.chronic_diseases && <span className="badge badge-green" style={{ fontSize: 11, padding: '2px 8px', width: 'fit-content' }}>Здоровий(а)</span>}
                       </div>
                     </td>
-                    <td>
-                      <div style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={a.notes}>
+                    <td style={{ width: '20%' }}>
+                      <div style={{ fontSize: 13, color: 'var(--gray-600)', maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={a.notes}>
                         {a.notes || <span style={{ color: 'var(--gray-300)' }}>—</span>}
                       </div>
                     </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <td style={{ textAlign: 'center', width: 240, paddingRight: 40 }}>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'center', alignItems: 'center' }}>
                         <button className="btn btn-teal" style={{ padding: '6px 12px', fontSize: '11px', textAlign: 'center', lineHeight: 1.2, height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '90px' }} onClick={() => navigate(`/vet/patients/${a.id}`)}>
                           Медична<br />картка
                         </button>
-                        <button className="btn btn-teal btn-sm" style={{ height: '42px' }} onClick={() => openEdit(a)}>Нотатки</button>
+                        <button className="btn btn-teal btn-sm" style={{ height: '42px', width: '80px' }} onClick={() => openEdit(a)}>Нотатки</button>
                       </div>
                     </td>
                   </tr>

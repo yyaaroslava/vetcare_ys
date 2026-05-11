@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getAnimals } from '../../api/animals';
 import { getAppointments, cancelAppointment } from '../../api/appointments';
 import { getVisits } from '../../api/visits';
-import { Spinner, StatusBadge, speciesEmoji, Modal, ConfirmModal, showToast } from '../../components/ui';
+import { Spinner, StatusBadge, Modal, ConfirmModal, showToast } from '../../components/ui';
+import { extractData } from '../../utils/formatters';
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -19,9 +20,9 @@ export default function ClientDashboard() {
   const loadData = () => {
     Promise.all([getAnimals(), getAppointments(), getVisits()])
       .then(([a, ap, v]) => {
-        setAnimals(a.data.results || a.data);
-        setAppointments(ap.data.results || ap.data);
-        setVisits(v.data.results || v.data);
+        setAnimals(extractData(a));
+        setAppointments(extractData(ap));
+        setVisits(extractData(v));
       }).finally(() => setLoading(false));
   };
 
@@ -44,12 +45,12 @@ export default function ClientDashboard() {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Show all upcoming appointments (will be scrollable)
+  // Майбутні записи (з прокруткою)
   const nearestAppointments = appointments
     .filter(a => ['pending', 'confirmed'].includes(a.status) && a.date >= todayStr)
     .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
 
-  // History: only completed or cancelled
+  // Історія: тільки завершені або скасовані
   const visitHistory = visits
     .filter(v => ['completed', 'cancelled', 'done'].includes(v.status))
     .sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date));

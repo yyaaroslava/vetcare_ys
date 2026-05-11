@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAppointments } from '../../api/appointments';
-import { Spinner, StatusBadge, EmptyState } from '../../components/ui';
+import { Spinner, StatusBadge, EmptyState, SearchBar } from '../../components/ui';
+import { formatDate, extractData } from '../../utils/formatters';
 
 /**
  * Журнал всіх записів на прийом для адміністрації клініки.
@@ -17,7 +18,7 @@ export default function AdminAppointments() {
   const [filterVet, setFilterVet] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  const load = () => getAppointments().then(r => setAppointments(r.data.results || r.data)).finally(() => setLoading(false));
+  const load = () => getAppointments().then(r => setAppointments(extractData(r))).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   if (loading) return <Spinner />;
@@ -44,11 +45,7 @@ export default function AdminAppointments() {
     return sortOrder === 'desc' ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
   });
 
-  const formatDate = (ds) => {
-    if (!ds) return '—';
-    const [y, m, d] = ds.split('-');
-    return `${d}.${m}.${y}`;
-  };
+
 
   // Унікальні значення для фільтрів
   const uniqueAnimals = Array.from(new Set(appointments.map(a => a.animal_name).filter(Boolean))).sort();
@@ -66,20 +63,10 @@ export default function AdminAppointments() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4" style={{alignItems: 'center'}}>
-        <input className="form-input" style={{flex: 1, maxWidth:500, fontSize:16}} 
-            placeholder="Швидкий пошук" 
-            value={search} onChange={e => setSearch(e.target.value)} />
-        <select className="form-select" style={{width: 180}} value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
-          <option value="desc">Спочатку нові</option>
-          <option value="asc">Спочатку старі</option>
-        </select>
-        {hasFilters && (
-          <button className="btn btn-gray btn-sm" onClick={() => { setSearch(''); setFilterDate(''); setFilterStatus(''); setFilterAnimal(''); setFilterClient(''); setFilterVet(''); }}>
-            Скинути все
-          </button>
-        )}
-      </div>
+      <SearchBar search={search} onSearchChange={setSearch}
+        sortOrder={sortOrder} onSortChange={setSortOrder}
+        hasFilters={hasFilters}
+        onReset={() => { setSearch(''); setFilterDate(''); setFilterStatus(''); setFilterAnimal(''); setFilterClient(''); setFilterVet(''); }} />
 
       <div className="card">
         <div className="card-header">

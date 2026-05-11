@@ -1,10 +1,13 @@
-from rest_framework import generics, status, permissions, viewsets
+from rest_framework import generics, status, permissions, viewsets, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer
+from .permissions import IsVetOrAdmin, IsAdminUser
 
 # В'ю для реєстрації нових клієнтів
 class RegisterView(generics.CreateAPIView):
@@ -27,27 +30,34 @@ class RegisterView(generics.CreateAPIView):
             }
         }, status=status.HTTP_201_CREATED)
 
-# В'ю для аутентифікації користувачів
-class LoginView(APIView):
-    permission_classes = [permissions.AllowAny]
+# Спеціальний серіалізатор для логіну, що повертає дані користувача разом з токенами
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    # Ми перехоплюємо 'email' замість 'username', щоб відповідати фронтенду
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Видаляємо дефолтне поле username, бо ми використовуємо email
+        if 'username' in self.fields:
+            del self.fields['username']
 
-    def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
+    def validate(self, attrs):
+        # Переносимо email у поле username для внутрішньої логіки SimpleJWT
+        attrs[self.username_field] = attrs.get('email')
+        data = super().validate(attrs)
         
-        # Перевірка облікових даних
-        user = authenticate(request, username=email, password=password)
-        
-        if user:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'user': UserSerializer(user).data,
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                }
-            })
-        return Response({'detail': 'Невірний email або пароль'}, status=status.HTTP_401_UNAUTHORIZED)
+        data['user'] = UserSerializer(self.user).data
+        data['tokens'] = {
+            'refresh': data.pop('refresh'),
+            'access': data.pop('access'),
+        }
+        return data
+
+# В'ю для аутентифікації користувачів
+class LoginView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+    permission_classes = [permissions.AllowAny]
 
 # В'ю для отримання даних профілю
 class MeView(generics.RetrieveAPIView):
@@ -76,23 +86,20 @@ class VetListView(generics.ListAPIView):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        return User.objects.filter(is_staff=True, is_superuser=False)
+        return User.objects.filter(role='doctor').order_by('first_name')
 
 
 # Список клієнтів — доступний для лікарів та адмінів
 class ClientListView(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsVetOrAdmin]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_staff or user.is_superuser:
-            return User.objects.filter(is_staff=False, is_superuser=False).order_by('first_name')
-        return User.objects.none()
+        return User.objects.filter(role='client').order_by('first_name', 'last_name')
 # Управління користувачами для адміна
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        return User.objects.filter(is_staff=False, is_superuser=False).order_by('-created_at')
+        return User.objects.all().order_by('-created_at')

@@ -21,8 +21,10 @@ import VetPatients from './pages/vet/Patients';
 import VetDashboard from './pages/vet/Dashboard';
 import VetSchedule from './pages/vet/Schedule';
 import VetVisits from './pages/vet/Visits';
+import VetVaccinations from './pages/vet/Vaccinations';
 
 import ClientVisits from './pages/client/Visits';
+import ClientVaccinations from './pages/client/Vaccinations';
 
 import './index.css';
 
@@ -75,6 +77,7 @@ function App() {
             <Route path="pets/:id" element={<ClientMedCard />} />
             <Route path="appointments" element={<ClientAppointments />} />
             <Route path="visits" element={<ClientVisits />} />
+            <Route path="vaccinations" element={<ClientVaccinations />} />
           </Route>
 
           {/* Vet */}
@@ -89,6 +92,7 @@ function App() {
             <Route path="patients/:id" element={<ClientMedCard />} />
             <Route path="appointments" element={<ClientAppointments />} />
             <Route path="visits" element={<VetVisits />} />
+            <Route path="vaccinations" element={<VetVaccinations />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
