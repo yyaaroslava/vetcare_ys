@@ -48,6 +48,7 @@ jobs:
         POSTGRES_PASSWORD: vetcare_password
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
+        PYTHONPATH: .
       run: |
         python manage.py test apps.accounts apps.animals apps.appointments apps.visits apps.vaccinations
 
