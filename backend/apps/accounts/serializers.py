@@ -81,7 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True)
-    phone = serializers.CharField(required=True, max_length=13) # Телефон тепер обов'язковий поле
+    phone = serializers.CharField(required=True, max_length=13) # Телефон тепер обов'язкове поле
 
     class Meta:
         model = User

@@ -148,7 +148,7 @@ export default function ClientPets() {
         title={editing ? 'Редагувати тварину' : 'Додати тварину'}
         actions={<>
           <button className="btn btn-gray" onClick={() => setModal(false)}>Скасувати</button>
-          <button className="btn btn-teal" onClick={handleSave} disabled={saving}>{saving ? '...' : 'Зберегти'}</button>
+          <button className="btn btn-teal" onClick={handleSave} disabled={saving || form.weight < 0}>{saving ? '...' : 'Зберегти'}</button>
         </>}>
         <div className="grid-2">
           <div className="form-group" style={{marginBottom:0}}>
@@ -195,7 +195,17 @@ export default function ClientPets() {
         <div className="grid-2 mt-4">
           <div className="form-group" style={{marginBottom:0}}>
             <label className="form-label">Вага (кг)</label>
-            <input className="form-input" type="number" step="0.1" value={form.weight} onChange={e=>set('weight',e.target.value)} placeholder="15" />
+            <input 
+              className="form-input" 
+              type="number" 
+              step="0.1" 
+              min="0"
+              value={form.weight} 
+              onChange={e=>set('weight',e.target.value)} 
+              placeholder="15" 
+              style={{ borderColor: form.weight < 0 ? 'var(--red)' : undefined }}
+            />
+            {form.weight < 0 && <div style={{color:'var(--red)', fontSize:12, marginTop:4}}>Вага не може бути від'ємною</div>}
           </div>
           <div className="form-group" style={{marginBottom:0}}>
             <label className="form-label">Колір</label>

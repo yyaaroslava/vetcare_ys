@@ -34,3 +34,8 @@ class VisitSerializer(serializers.ModelSerializer):
         if obj.appointment and obj.appointment.time:
             return obj.appointment.get_end_time().strftime('%H:%M')
         return None
+
+    def validate_weight_at_visit(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError("Вага не може бути від'ємною.")
+        return value
