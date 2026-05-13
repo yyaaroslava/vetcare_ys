@@ -304,11 +304,11 @@ export default function VetSchedule() {
         </div>
         <div className="form-group">
           <label className="form-label">Час * <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 400 }}>(08:00–17:00)</span></label>
-          <TimeSlotGrid 
-            slots={slots} 
-            selectedTime={addForm.time} 
-            onSelect={time => setAddForm(f => ({ ...f, time }))} 
-            loading={slotsLoading} 
+          <TimeSlotGrid
+            slots={slots}
+            selectedTime={addForm.time}
+            onSelect={time => setAddForm(f => ({ ...f, time }))}
+            loading={slotsLoading}
           />
         </div>
       </Modal>
