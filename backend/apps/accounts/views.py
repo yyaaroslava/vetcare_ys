@@ -102,4 +102,8 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        return User.objects.all().order_by('-created_at')
+        queryset = User.objects.all().order_by('-created_at')
+        role = self.request.query_params.get('role')
+        if role:
+            queryset = queryset.filter(role=role)
+        return queryset

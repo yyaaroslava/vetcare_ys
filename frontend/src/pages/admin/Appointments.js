@@ -73,49 +73,49 @@ export default function AdminAppointments() {
           <div className="card-title">Журнал записів</div>
           <span className="badge badge-teal">{filtered.length}</span>
         </div>
-        
+
         {filtered.length === 0 ? (
           <div className="card-body"><EmptyState icon="" title="Прийомів не знайдено" /></div>
         ) : (
           <div className="table-wrap">
             <table>
-              <thead style={{background:'var(--teal)', color:'#fff'}}>
-                <tr style={{fontSize:14}}>
-                  <th style={{width: 130, padding: '10px 16px', verticalAlign: 'top'}}>
-                    <div style={{marginBottom: 6, fontSize: 12, opacity: 0.9}}>ДАТА/ЧАС</div>
+              <thead style={{ background: 'var(--teal)', color: '#fff' }}>
+                <tr style={{ fontSize: 14 }}>
+                  <th style={{ width: 130, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ДАТА/ЧАС</div>
                     <input type="date" className="form-input input-xs"
                       value={filterDate} onChange={e => setFilterDate(e.target.value)} />
                   </th>
-                  <th style={{width: 140, padding: '10px 16px', verticalAlign: 'top'}}>
-                    <div style={{marginBottom: 6, fontSize: 12, opacity: 0.9}}>ТВАРИНА</div>
+                  <th style={{ width: 140, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ТВАРИНА</div>
                     <select className="form-select input-xs"
                       value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
                       <option value="">Всі</option>
                       {uniqueAnimals.map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                   </th>
-                  <th style={{width: 140, padding: '10px 16px', verticalAlign: 'top'}}>
-                    <div style={{marginBottom: 6, fontSize: 12, opacity: 0.9}}>КЛІЄНТ</div>
+                  <th style={{ width: 140, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>КЛІЄНТ</div>
                     <select className="form-select input-xs"
                       value={filterClient} onChange={e => setFilterClient(e.target.value)}>
                       <option value="">Всі</option>
                       {uniqueClients.map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                   </th>
-                  <th style={{width: 160, padding: '10px 16px', verticalAlign: 'top'}}>
-                    <div style={{marginBottom: 6, fontSize: 12, opacity: 0.9}}>ЛІКАР</div>
+                  <th style={{ width: 160, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ЛІКАР</div>
                     <select className="form-select input-xs"
                       value={filterVet} onChange={e => setFilterVet(e.target.value)}>
                       <option value="">Всі</option>
                       {uniqueVets.map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                   </th>
-                  <th style={{padding: '10px 16px', verticalAlign: 'top'}}>
-                    <div style={{marginBottom: 6, fontSize: 12, opacity: 0.9}}>ОПИС</div>
-                    <div style={{height: 28}}></div>
+                  <th style={{ padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>ОПИС</div>
+                    <div style={{ height: 28 }}></div>
                   </th>
-                  <th style={{width: 140, padding: '10px 16px', verticalAlign: 'top'}}>
-                    <div style={{marginBottom: 6, fontSize: 12, opacity: 0.9}}>СТАТУС</div>
+                  <th style={{ width: 140, padding: '10px 16px', verticalAlign: 'top' }}>
+                    <div style={{ marginBottom: 6, fontSize: 12, opacity: 0.9 }}>СТАТУС</div>
                     <select className="form-select input-xs"
                       value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
                       <option value="">Всі</option>

@@ -59,6 +59,7 @@ export default function AdminUsers() {
   if (loading) return <Spinner />;
 
   let filtered = users;
+  if (filterRole) filtered = filtered.filter(u => u.role === filterRole);
   if (search) filtered = filtered.filter(u => `${u.first_name} ${u.last_name} ${u.email} ${u.phone || ''}`.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -106,7 +107,7 @@ export default function AdminUsers() {
                       <option value="">Всі ролі</option>
                       <option value="admin">Адміністратор</option>
                       <option value="doctor">Лікар</option>
-                      <option value="client">Клієнт</option>
+                      <option value="client">Власник</option>
                     </select>
                   </th>
                   <th style={{ width: '16.66%', padding: '10px 16px', verticalAlign: 'top' }}>
