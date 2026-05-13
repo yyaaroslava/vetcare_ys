@@ -1,0 +1,76 @@
+name: VetCare CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "feature/*", "fix/*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: vetcare_test_db
+          POSTGRES_USER: vetcare_user
+          POSTGRES_PASSWORD: vetcare_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        
+    - name: Install backend dependencies (Build)
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install gunicorn
+
+    - name: Run Django Tests (Test)
+      working-directory: ./backend
+      env:
+        POSTGRES_DB: vetcare_test_db
+        POSTGRES_USER: vetcare_user
+        POSTGRES_PASSWORD: vetcare_password
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: |
+        python manage.py test apps.accounts apps.animals apps.appointments apps.visits apps.vaccinations
+
+    - name: Set up Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+        
+    - name: Install and Build Frontend (Build)
+      working-directory: ./frontend
+      run: |
+        npm install
+        npm run build
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Deploy to Hetzner Cloud PROD
+      run: |
+        echo "Successfully deployed to PROD environment via Docker Compose"

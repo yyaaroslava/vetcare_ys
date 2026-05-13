@@ -6,7 +6,19 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('Email обов’язковий')
+        
         email = self.normalize_email(email)
+        
+        # Автоматична генерація username на основі email, якщо він не вказаний
+        if 'username' not in extra_fields:
+            base_username = email.split('@')[0]
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            extra_fields['username'] = username
+            
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
