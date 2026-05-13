@@ -28,7 +28,7 @@ const RegisterPage = () => {
   };
 
   const phoneDigits = form.phone.slice(4).length;
-  const isPhoneValid = phoneDigits >= 9;
+  const isPhoneValid = phoneDigits === 9;
   
   const isNameInvalid = (val) => {
     if (!val) return false;
@@ -102,7 +102,7 @@ const RegisterPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Телефон <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>+380 + 9 цифр</span></label>
+            <label className="form-label">Телефон</label>
             <div style={{ position: 'relative' }}>
               <input 
                 className="form-input" 
@@ -110,6 +110,7 @@ const RegisterPage = () => {
                 value={form.phone} 
                 onChange={e => handlePhone(e.target.value)}
                 placeholder="+380XXXXXXXXX"
+                maxLength={13}
                 style={{ 
                   borderColor: isPhoneValid ? 'var(--green)' : (phoneDigits > 0 ? 'var(--red)' : undefined), 
                   paddingRight: 36 

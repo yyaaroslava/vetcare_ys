@@ -74,7 +74,8 @@ class CancelAppointmentView(APIView):
         if appt.status == Appointment.STATUS_COMPLETED:
             return Response({'detail': 'Не можна скасувати завершений прийом'}, status=400)
             
-        # Збереження змін у записі
+        # Оновлюємо статус на "Скасовано"
+        appt.status = Appointment.STATUS_CANCELLED
         appt.save()
         
         return Response(AppointmentSerializer(appt).data)

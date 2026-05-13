@@ -469,7 +469,7 @@ export default function ClientMedCard() {
 
       {/* Modals */}
       <Modal open={!!editAnimal} onClose={() => setEditAnimal(null)} title="Редагувати тварину"
-        actions={<><button className="btn btn-gray" onClick={() => setEditAnimal(null)}>Скасувати</button><button className="btn btn-teal" onClick={handleSaveAnimal} disabled={saving}>Зберегти</button></>}>
+        actions={<><button className="btn btn-gray" onClick={() => setEditAnimal(null)}>Скасувати</button><button className="btn btn-teal" onClick={handleSaveAnimal} disabled={saving || (editAnimal && editAnimal.weight < 0)}>Зберегти</button></>}>
         {editAnimal && (
           <div style={{display:'flex', flexDirection:'column', gap: 0}}>
             <div className="grid-2">
@@ -517,7 +517,17 @@ export default function ClientMedCard() {
             <div className="grid-2 mt-4">
               <div className="form-group" style={{marginBottom:0}}>
                 <label className="form-label">Вага (кг)</label>
-                <input className="form-input" type="number" step="0.1" value={editAnimal.weight || ''} onChange={e=>setA('weight', e.target.value)} placeholder="15" />
+                <input 
+                  className="form-input" 
+                  type="number" 
+                  step="0.1" 
+                  min="0"
+                  value={editAnimal.weight || ''} 
+                  onChange={e=>setA('weight', e.target.value)} 
+                  placeholder="15" 
+                  style={{ borderColor: editAnimal.weight < 0 ? 'var(--red)' : undefined }}
+                />
+                {editAnimal.weight < 0 && <div style={{color:'var(--red)', fontSize:12, marginTop:4}}>Вага не може бути від'ємною</div>}
               </div>
               <div className="form-group" style={{marginBottom:0}}>
                 <label className="form-label">Колір</label>

@@ -68,6 +68,11 @@ class AnimalSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Колір не може складатися лише з цифр.")
         return value
 
+    def validate_weight(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError("Вага не може бути від'ємною.")
+        return value
+
     def validate_birth_date(self, value):
         if value:
             from datetime import date

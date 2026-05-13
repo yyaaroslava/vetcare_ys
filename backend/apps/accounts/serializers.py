@@ -16,9 +16,11 @@ def validate_ua_phone(value):
     if not value:
         return value
     cleaned = re.sub(r'[\s()\-]', '', value)
-    if not re.match(r'^\+380\d{9,}$', cleaned):
+    
+    # Сувора перевірка довжини: префікс +380 (4 символи) + 9 цифр = 13 символів
+    if len(cleaned) != 13 or not re.match(r'^\+380\d{9}$', cleaned):
         raise serializers.ValidationError(
-            "Невірний формат. Коректний: +380XXXXXXXXX (9 цифр після +380)"
+            "Невірний формат. Коректний: +380XXXXXXXXX (рівно 9 цифр після +380)"
         )
     return cleaned
 
@@ -79,7 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True)
-    phone = serializers.CharField(required=True) # Телефон тепер обов'язковий поле
+    phone = serializers.CharField(required=True, max_length=13) # Телефон тепер обов'язкове поле
 
     class Meta:
         model = User
