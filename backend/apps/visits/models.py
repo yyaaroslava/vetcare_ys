@@ -9,8 +9,6 @@ class Visit(models.Model):
     appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='visit')
     diagnosis = models.TextField(verbose_name='Діагноз / Опис')
     prescription = models.TextField(blank=True, verbose_name='Призначення')
-    weight_at_visit = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='Вага на момент візиту')
-    temperature = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name='Температура')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

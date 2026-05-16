@@ -72,6 +72,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Deploy to Hetzner Cloud PROD
+    - name: Deploy to Render PROD
       run: |
-        echo "Successfully deployed to PROD environment via Docker Compose"
+        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        echo "Successfully triggered deployment on Render via Deploy Hook"

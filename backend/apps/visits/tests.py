@@ -47,9 +47,7 @@ class VisitTests(TestCase):
         data = {
             'appointment': self.appointment.id,
             'diagnosis': 'Отит зовнішнього вуха',
-            'prescription': 'Краплі Софрадекс 2 рази на день, 7 днів',
-            'weight_at_visit': 12.5,
-            'temperature': 38.5
+            'prescription': 'Краплі Софрадекс 2 рази на день, 7 днів'
         }
         response = self.api.post('/api/visits/', data)
         self.assertIn(response.status_code, [
