@@ -223,7 +223,10 @@ export default function VetDashboard() {
           <textarea className="form-textarea" value={vForm.prescription} onChange={e => setVForm(f => ({ ...f, prescription: e.target.value }))} placeholder="Препарати, процедури..." />
         </div>
         <div className="form-group">
-          <button type="button" className="btn btn-outline w-full" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+          <button type="button" className="btn btn-outline w-full" onClick={() => {
+            setVacData({ animalId: selected?.animal, ownerId: selected?.client });
+            setVacModal(true);
+          }}>
             Зареєструвати вакцинацію
           </button>
         </div>

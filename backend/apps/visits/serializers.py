@@ -10,6 +10,7 @@ class VisitSerializer(serializers.ModelSerializer):
     animal_name = serializers.ReadOnlyField(source='appointment.animal.name')
     vet = serializers.ReadOnlyField(source='appointment.vet.id')
     vet_name = serializers.SerializerMethodField(read_only=True)
+    owner = serializers.ReadOnlyField(source='appointment.animal.owner.id')
     owner_name = serializers.SerializerMethodField(read_only=True)
     status_display = serializers.SerializerMethodField(read_only=True)
     visit_date = serializers.ReadOnlyField(source='appointment.date', read_only=True)
@@ -20,12 +21,12 @@ class VisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
         fields = [
-            'id', 'animal', 'animal_name', 'vet', 'vet_name', 'owner_name',
+            'id', 'animal', 'animal_name', 'vet', 'vet_name', 'owner', 'owner_name',
             'appointment', 'visit_date', 'visit_time', 'visit_end_time', 'diagnosis', 'prescription',
-            'status', 'status_display', 'weight_at_visit', 'temperature',
+            'status', 'status_display',
             'notes', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'animal', 'animal_name', 'vet', 'vet_name', 'owner_name', 'visit_date', 'visit_time', 'visit_end_time', 'status', 'status_display', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'animal', 'animal_name', 'vet', 'vet_name', 'owner', 'owner_name', 'visit_date', 'visit_time', 'visit_end_time', 'status', 'status_display', 'created_at', 'updated_at']
 
     def get_vet_name(self, obj): return obj.appointment.vet.get_full_name()
     def get_owner_name(self, obj): return obj.appointment.animal.owner.get_full_name()
@@ -35,7 +36,3 @@ class VisitSerializer(serializers.ModelSerializer):
             return obj.appointment.get_end_time().strftime('%H:%M')
         return None
 
-    def validate_weight_at_visit(self, value):
-        if value is not None and value < 0:
-            raise serializers.ValidationError("Вага не може бути від'ємною.")
-        return value
