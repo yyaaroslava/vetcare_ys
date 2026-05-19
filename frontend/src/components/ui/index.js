@@ -110,8 +110,18 @@ export const speciesEmoji = s => {
 };
 
 // ─── Role label ───────────────────────────────────────────
-export const roleLabel = r => ({ client: 'Власник', doctor: 'Лікар', admin: 'Адміністратор' }[r] || r);
-export const roleBadgeColor = r => ({ client: 'blue', doctor: 'teal', admin: 'orange' }[r] || 'gray');
+export const roleLabel = r => ({
+  client: 'Власник',
+  doctor: 'Лікар',
+  vet: 'Лікар', // legacy role value from old init scripts
+  admin: 'Адміністратор',
+}[r] || r);
+export const roleBadgeColor = r => ({
+  client: 'blue',
+  doctor: 'teal',
+  vet: 'teal',
+  admin: 'orange',
+}[r] || 'gray');
 
 // ─── SearchBar ────────────────────────────────────────────
 /**

@@ -24,7 +24,7 @@ users = [
         'first_name': 'Doctor',
         'last_name': 'House',
         'phone': '+380111111111',
-        'role': 'vet',
+        'role': 'doctor',
         'is_staff': True
     },
     {
@@ -58,5 +58,10 @@ for u_data in users:
         print(f"Created user: {email}", flush=True)
     else:
         print(f"Updated user: {email}", flush=True)
+
+
+fixed = User.objects.filter(role='vet').update(role='doctor')
+if fixed:
+    print(f"Updated {fixed} user(s): role vet → doctor", flush=True)
 
 print("DB initialization finished.", flush=True)

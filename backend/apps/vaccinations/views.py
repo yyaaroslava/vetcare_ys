@@ -18,6 +18,10 @@ class VaccinationListCreateView(generics.ListCreateAPIView):
             # Тільки свої для клієнтів
             qs = qs.filter(animal__owner=user)
             
+        animal_id = self.request.query_params.get('animal')
+        if animal_id:
+            qs = qs.filter(animal_id=animal_id)
+            
         return qs
 
     def perform_create(self, serializer):
