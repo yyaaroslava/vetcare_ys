@@ -1,10 +1,5 @@
 #  VetCare — Інформаційна Система Управління Ветеринарною Клінікою
 
-[![VetCare CI/CD Pipeline](https://github.com/yyaaroslava/vetcare_ys/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/yyaaroslava/vetcare_ys/actions)
-[![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org)
-[![Django](https://img.shields.io/badge/django-4.2-green.svg)](https://www.djangoproject.com)
-[![React](https://img.shields.io/badge/react-18.2-blue.svg)](https://react.dev)
-[![Docker](https://img.shields.io/badge/docker-compose-blue.svg)](https://www.docker.com)
 
 **VetCare** — це сучасний, високотехнологічний вебзастосунок для автоматизації процесів обліку, планування та моніторингу діяльності ветеринарної клініки. Проєкт розроблено як розподілену клієнт-серверну систему з розмежуванням ролей доступу, інтегрованим календарем вакцинації, електронними медичними картками пацієнтів та автоматизованим CI/CD конвеєром.
 
