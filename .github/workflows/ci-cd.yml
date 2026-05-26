@@ -69,10 +69,15 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
     - name: Deploy to Render PROD
+      env:
+        RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
       run: |
-        curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
-        echo "Successfully triggered deployment on Render via Deploy Hook"
+        if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+          echo "❌ ERROR: RENDER_DEPLOY_HOOK secret is not set in GitHub repository settings!"
+          exit 1
+        fi
+        curl -f -X POST "$RENDER_DEPLOY_HOOK"
+        echo ""
+        echo "✅ Successfully triggered deployment on Render via Deploy Hook"
+
